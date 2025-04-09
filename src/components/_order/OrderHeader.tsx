@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Typography, Button } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";

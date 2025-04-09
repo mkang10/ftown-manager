@@ -1,4 +1,6 @@
 // components/_inventory/_import/ProductDetails.tsx
+"use client";
+
 import React from "react";
 import { Grid, TextField } from "@mui/material";
 

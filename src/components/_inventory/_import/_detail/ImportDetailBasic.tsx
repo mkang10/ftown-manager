@@ -1,3 +1,5 @@
+
+"use client";
 // components/inventory/import/ImportDetailBasic.tsx
 import React from "react";
 import { Box, Typography } from "@mui/material";

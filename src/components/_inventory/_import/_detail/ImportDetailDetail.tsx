@@ -1,3 +1,5 @@
+
+"use client";
 import React, { useState } from "react";
 import { Box, Typography, Button, Collapse, Grid, Alert } from "@mui/material";
 import { ImportDetailItem, AuditLog } from "@/type/importdetail";

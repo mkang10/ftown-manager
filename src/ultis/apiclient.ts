@@ -2,8 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 
 // Khởi tạo axios với URL gốc của API
 
-//deploy
-
+// Deploy
 // const apiclient: AxiosInstance = axios.create({
 //   baseURL: 'https://apivietnong-f9a8ecdydsdmebb3.canadacentral-01.azurewebsites.net/api',
 //   headers: {
@@ -12,7 +11,7 @@ import axios, { AxiosInstance } from 'axios';
 //   },
 // });
 
-//localhost
+// Localhost
 const apiclient: AxiosInstance = axios.create({
   baseURL: 'https://localhost:7265/api/',
   headers: {
@@ -21,21 +20,20 @@ const apiclient: AxiosInstance = axios.create({
   },
 });
 
-
-
-
-// Thêm interceptor để tự động thêm token vào tiêu đề
-apiclient.interceptors.request.use(
-  config => {
-    const token = localStorage.getItem('token'); // Lấy token từ localStorage
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`; // Thêm token vào tiêu đề
+// ⚠️ Chỉ thêm interceptor khi đang chạy ở client-side
+if (typeof window !== 'undefined') {
+  apiclient.interceptors.request.use(
+    config => {
+      const token = localStorage.getItem('token'); // Lấy token từ localStorage
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`; // Thêm token vào tiêu đề
+      }
+      return config;
+    },
+    error => {
+      return Promise.reject(error);
     }
-    return config; // Trả về cấu hình đã chỉnh sửa
-  },
-  error => {
-    return Promise.reject(error);
-  }
-);
+  );
+}
 
 export default apiclient;

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import InboxIcon from "@mui/icons-material/Inbox";
