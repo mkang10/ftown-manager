@@ -1,7 +1,6 @@
 import apiclient from "./apiclient";
 import { LoginRequest, LoginResponse, } from "@/type/auth"; // Cập nhật đường dẫn nếu cần
 import axios from 'axios';
-import odataClient from "./odataclient";
 import authclient from "./authclient";
 
 

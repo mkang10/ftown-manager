@@ -75,7 +75,7 @@ const DashboardLayoutStaff: React.FC<DashboardLayoutProps> = ({ children }) => {
               icon={<FiHome />}
               label="Dashboard"
               isOpen={isSidebarOpen}
-              route="/staff/dashboard"
+              route="/staff-dashboard"
             />
                <SidebarDropdown
               id="warehouses"
@@ -84,7 +84,7 @@ const DashboardLayoutStaff: React.FC<DashboardLayoutProps> = ({ children }) => {
               isOpen={isSidebarOpen}
               subItems={[
                 { label: "Import Requests", route: "/staff-import-requests" },
-                { label: "Export Requests", route: "/staffs-export-requests" },
+                { label: "Dispatch Requests", route: "/staff-dispatch-request" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
@@ -97,8 +97,8 @@ const DashboardLayoutStaff: React.FC<DashboardLayoutProps> = ({ children }) => {
               label="Orders"
               isOpen={isSidebarOpen}
               subItems={[
-                { label: "Receive Orders", route: "/staff/orders/receive" },
-                { label: "Confirm Orders", route: "/staff/orders/confirm" },
+                { label: "Receive Orders", route: "/orders/receive" },
+                { label: "Confirm Orders", route: "/order/order-confirm" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}

@@ -12,16 +12,16 @@ import {
   MenuItem,
 } from "@mui/material";
 import { GetStaffNamesResponse, StaffName } from "@/type/Staff";
-import { assignStaffDetail, getStaffNames } from "@/ultis/AssignAPI";
+import { assignDispatchStaffDetail, assignStaffDetail, getStaffNames } from "@/ultis/AssignAPI";
 
 interface StaffAssignDialogProps {
   open: boolean;
-  importId: number; // Dùng cho hàm assignStaffDetail như cũ
+  dispatchId: number; // Dùng cho hàm assignStaffDetail như cũ
   onClose: () => void;
   onAssigned: () => void;
 }
 
-const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, onClose, onAssigned }) => {
+const StaffAssignDispatch: React.FC<StaffAssignDialogProps> = ({ open, dispatchId, onClose, onAssigned }) => {
   const [staffOptions, setStaffOptions] = useState<StaffName[]>([]);
   const [selectedStaffId, setSelectedStaffId] = useState<number | "">("");
 
@@ -48,7 +48,7 @@ const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, o
     }
     try {
       // Gọi hàm assignStaffDetail theo logic cũ: truyền importId và staffDetailId
-      const result = await assignStaffDetail(importId, Number(selectedStaffId));
+      const result = await assignDispatchStaffDetail(dispatchId, Number(selectedStaffId));
       if (result.status) {
         onAssigned();
       } else {
@@ -98,4 +98,4 @@ const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, o
   );
 };
 
-export default StaffAssignDialog;
+export default StaffAssignDispatch;

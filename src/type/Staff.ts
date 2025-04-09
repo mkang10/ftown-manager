@@ -1,3 +1,7 @@
+export interface AssignStaffRequest{
+  warehouseId : number;
+}
+
 export interface AssignStaffResponse {
   data: boolean;
   status: boolean;

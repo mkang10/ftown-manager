@@ -38,18 +38,31 @@ export const filterInventoryImports = async (
   filterData: Record<string, any>
 ): Promise<FilterInventoryResponse> => {
   try {
-    // Tạo query string từ filterData
     const queryParams = new URLSearchParams();
+
+    // Thêm các filter hợp lệ
     Object.keys(filterData).forEach((key) => {
-      if (filterData[key]) {
-        queryParams.append(key, filterData[key]);
+      if (filterData[key] !== undefined && filterData[key] !== null && filterData[key] !== "") {
+        queryParams.append(key, String(filterData[key]));
       }
     });
 
-    // Gọi GET với query string
+    // Lấy shopManagerDetailId từ localStorage
+    const accountStr = localStorage.getItem("account");
+    if (!accountStr) throw new Error("Không tìm thấy thông tin tài khoản trong localStorage");
+
+    const account = JSON.parse(accountStr);
+    const shopManagerDetailId = account?.roleDetails?.shopManagerDetailId;
+
+    if (!shopManagerDetailId) throw new Error("Không tìm thấy shopManagerDetailId trong account");
+
+    // Luôn gán HandleBy
+    queryParams.set("HandleBy", shopManagerDetailId);
+
     const response = await shopmanagerclient.get<FilterInventoryResponse>(
       `/inventoryimport/get-all?${queryParams.toString()}`
     );
+
     return response.data;
   } catch (error) {
     console.error("Error filtering inventory imports:", error);
@@ -101,16 +114,24 @@ export const filterStaffInventoryImports = async (
   filterData: Record<string, any>
 ): Promise<FilterStaffInventoryResponse> => {
   try {
+    // Lấy StaffDetailId từ localStorage (nếu có)
+    const storedAccount = localStorage.getItem("account");
+    if (storedAccount) {
+      const account = JSON.parse(storedAccount);
+      const staffId = account.roleDetails?.staffDetailId;
+      if (staffId) {
+        filterData.StaffDetailId = staffId; // ✅ luôn truyền StaffDetailId vào filter
+      }
+    }
+
     // Tạo query string từ filterData
     const queryParams = new URLSearchParams();
     Object.keys(filterData).forEach((key) => {
-      // Kiểm tra nếu giá trị không undefined, null hoặc chuỗi rỗng
       if (filterData[key] !== undefined && filterData[key] !== null && filterData[key] !== "") {
         queryParams.append(key, String(filterData[key]));
       }
     });
 
-    // Gọi GET với query string, ví dụ sử dụng axios instance shopmanagerclient
     const response = await shopmanagerclient.get<FilterStaffInventoryResponse>(
       `/inventoryimport/by-staff/?${queryParams.toString()}`
     );
@@ -120,6 +141,7 @@ export const filterStaffInventoryImports = async (
     throw error;
   }
 };
+
 
 // ultis/importRequest.ts
 

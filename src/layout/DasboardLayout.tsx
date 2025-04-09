@@ -94,9 +94,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               label="Orders"
               isOpen={isSidebarOpen}
               subItems={[
-                { label: "Order Confirmation", route: "/orders/confirmation" },
-                { label: "Delivery", route: "/orders/delivery" },
-                { label: "Complaint Handling", route: "/orders/complaints" },
+                { label: "Order Assignment", route: "/order/order-assign" },
+                { label: "Delivery", route: "/order/delivery" },
+                { label: "Complaint Handling", route: "/order/complaints" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
@@ -109,17 +109,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               isOpen={isSidebarOpen}
               subItems={[
                 { label: "Inventory Import", route: "/inventory/import" },
-                { label: "Inventory Export", route: "/inventory/export" },
+                { label: "Inventory Dispatch", route: "/inventory/dispatch" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
             />
 
-            <SidebarItem
+            <SidebarDropdown
+              id="Assignment"
               icon={<FiUserCheck />}
               label="Staff Assignment"
               isOpen={isSidebarOpen}
-              route="/staff-assignment"
+              subItems={[
+                { label: "Assign Import", route: "/assign/import" },
+                { label: "Assign Dispatch", route: "/assign/dispatch" },
+              ]}
+              activeDropdown={activeDropdown}
+              setActiveDropdown={setActiveDropdown}
             />
 
             <SidebarDropdown

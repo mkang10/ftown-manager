@@ -1,4 +1,3 @@
-"use client";
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -12,16 +11,22 @@ import {
   MenuItem,
 } from "@mui/material";
 import { GetStaffNamesResponse, StaffName } from "@/type/Staff";
-import { assignStaffDetail, getStaffNames } from "@/ultis/AssignAPI";
+import { getStaffNames } from "@/ultis/AssignAPI";
+import { assignOrderToStaff } from "@/ultis/OrderAPI"; // API mới cho đơn hàng
 
-interface StaffAssignDialogProps {
+interface OrderAssignDialogProps {
   open: boolean;
-  importId: number; // Dùng cho hàm assignStaffDetail như cũ
+  orderId: number;
   onClose: () => void;
   onAssigned: () => void;
 }
 
-const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, onClose, onAssigned }) => {
+const OrderAssignDialog: React.FC<OrderAssignDialogProps> = ({
+  open,
+  orderId,
+  onClose,
+  onAssigned,
+}) => {
   const [staffOptions, setStaffOptions] = useState<StaffName[]>([]);
   const [selectedStaffId, setSelectedStaffId] = useState<number | "">("");
 
@@ -29,10 +34,8 @@ const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, o
     if (open) {
       getStaffNames()
         .then((res: GetStaffNamesResponse) => {
-          console.log("API response:", res);
           if (res.status) {
             setStaffOptions(res.data);
-            console.log("Staff options set:", res.data);
           }
         })
         .catch((error) => {
@@ -47,8 +50,7 @@ const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, o
       return;
     }
     try {
-      // Gọi hàm assignStaffDetail theo logic cũ: truyền importId và staffDetailId
-      const result = await assignStaffDetail(importId, Number(selectedStaffId));
+      const result = await assignOrderToStaff(orderId, Number(selectedStaffId));
       if (result.status) {
         onAssigned();
       } else {
@@ -64,7 +66,7 @@ const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, o
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Chọn nhân viên</DialogTitle>
+      <DialogTitle>Chọn nhân viên để xử lý đơn hàng</DialogTitle>
       <DialogContent>
         <FormControl fullWidth>
           <InputLabel id="staff-select-label">Nhân viên</InputLabel>
@@ -98,4 +100,4 @@ const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, o
   );
 };
 
-export default StaffAssignDialog;
+export default OrderAssignDialog;
