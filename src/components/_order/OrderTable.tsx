@@ -60,7 +60,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ items, onRefresh, onAssign }) =
               </TableCell>
               <TableCell align="center">
                 <Stack direction="row" spacing={1} justifyContent="center">
-                  {order.status.toLowerCase() === "pending confirmed" ? (
+                  {["pending confirmed", "paid"].includes(order.status.toLowerCase()) ? (
                     <Button
                       variant="contained"
                       size="small"
