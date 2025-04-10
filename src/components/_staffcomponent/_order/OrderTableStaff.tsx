@@ -68,7 +68,6 @@ const OrderTableStaff: React.FC<OrderTableProps> = ({ items, onRefresh }) => {
             <TableCell align="center">Người mua</TableCell>
             <TableCell align="center">Ngày tạo</TableCell>
             <TableCell align="center">Trạng thái</TableCell>
-            <TableCell align="center">Tổng tiền</TableCell>
             <TableCell align="center">Action</TableCell>
           </TableRow>
         </TableHead>
