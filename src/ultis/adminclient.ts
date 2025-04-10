@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 
 const adminclient: AxiosInstance = axios.create({
-  baseURL: 'https://localhost:7267/api/',
+  baseURL: 'https://ftadminsevicewebapi.azurewebsites.net/api/',
   headers: {
     'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
     Accept: '*/*',
