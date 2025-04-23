@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -11,10 +9,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Box,
+  Typography,
+  Divider,
+  Slide,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { GetStaffNamesResponse, StaffName } from "@/type/Staff";
 import { getStaffNames } from "@/ultis/AssignAPI";
-import { assignOrderToStaff } from "@/ultis/OrderAPI"; // API mới cho đơn hàng
+import { assignOrderToStaff } from "@/ultis/OrderAPI";
 
 interface OrderAssignDialogProps {
   open: boolean;
@@ -23,82 +27,130 @@ interface OrderAssignDialogProps {
   onAssigned: () => void;
 }
 
-const OrderAssignDialog: React.FC<OrderAssignDialogProps> = ({
-  open,
-  orderId,
-  onClose,
-  onAssigned,
-}) => {
+const OrderAssignDialog: React.FC<OrderAssignDialogProps> = ({ open, orderId, onClose, onAssigned }) => {
   const [staffOptions, setStaffOptions] = useState<StaffName[]>([]);
   const [selectedStaffId, setSelectedStaffId] = useState<number | "">("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
       getStaffNames()
         .then((res: GetStaffNamesResponse) => {
-          if (res.status) {
-            setStaffOptions(res.data);
-          }
+          if (res.status) setStaffOptions(res.data);
         })
-        .catch((error) => {
-          console.error("Error fetching staff names:", error);
-        });
+        .catch(console.error);
     }
   }, [open]);
 
   const handleConfirm = async () => {
-    if (selectedStaffId === "") {
+    if (!selectedStaffId) {
       alert("Vui lòng chọn nhân viên!");
       return;
     }
-    try {
-      const result = await assignOrderToStaff(orderId, Number(selectedStaffId));
-      if (result.status) {
-        onAssigned();
-      } else {
-        console.error("Assign staff failed:", result.message);
-      }
-    } catch (error) {
-      console.error("Error assigning staff:", error);
-    } finally {
-      onClose();
-      setSelectedStaffId("");
+    const result = await assignOrderToStaff(orderId, selectedStaffId as number);
+    if (result.status) {
+      onAssigned();
+      setSnackbarOpen(true);
     }
+    onClose();
+    setSelectedStaffId("");
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Chọn nhân viên để xử lý đơn hàng</DialogTitle>
-      <DialogContent>
-        <FormControl fullWidth>
-          <InputLabel id="staff-select-label">Nhân viên</InputLabel>
-          <Select
-            labelId="staff-select-label"
-            value={selectedStaffId}
-            label="Nhân viên"
-            onChange={(e) => setSelectedStaffId(Number(e.target.value))}
-          >
-            {staffOptions.length > 0 ? (
-              staffOptions.map((staff, index) => (
-                <MenuItem key={`${staff.id}-${index}`} value={staff.id}>
+    <>
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" TransitionComponent={Slide} transitionDuration={300}>
+        <DialogTitle
+          sx={{
+            fontWeight: 700,
+            fontSize: "20px",
+            bgcolor: "#f5f5f5",
+            px: 3,
+            py: 2,
+            borderBottom: "1px solid #e0e0e0",
+            textAlign: "center",
+          }}
+        >
+          Phân công đơn hàng #{orderId}
+        </DialogTitle>
+
+        <DialogContent sx={{ px: 3, py: 2 }}>
+          <Typography variant="subtitle1" gutterBottom>
+            Chọn nhân viên xử lý đơn hàng
+          </Typography>
+
+          <FormControl fullWidth variant="outlined" size="medium" sx={{ mt: 2 }}>
+            <InputLabel id="staff-select-label">Nhân viên</InputLabel>
+            <Select
+              labelId="staff-select-label"
+              value={selectedStaffId}
+              label="Nhân viên"
+              onChange={(e) => setSelectedStaffId(Number(e.target.value))}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    "& .MuiMenuItem-root:hover": {
+                      backgroundColor: "#f0f0f0",
+                    },
+                  },
+                },
+              }}
+            >
+              {staffOptions.map((staff) => (
+                <MenuItem key={staff.id} value={staff.id}>
                   {staff.fullName}
                 </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled value="">
-                Không có dữ liệu
-              </MenuItem>
-            )}
-          </Select>
-        </FormControl>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Hủy</Button>
-        <Button onClick={handleConfirm} variant="contained" color="primary">
-          Xác nhận
-        </Button>
-      </DialogActions>
-    </Dialog>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+
+        <Divider />
+
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={onClose}
+            color="inherit"
+            sx={{
+              transition: "all 0.3s ease",
+              "&:hover": {
+                backgroundColor: "#f2f2f2",
+              },
+            }}
+          >
+            Hủy
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleConfirm}
+            disabled={!selectedStaffId}
+            sx={{
+              transition: "all 0.3s ease",
+              "&:hover": {
+                backgroundColor: "#1d6ed8",
+              },
+            }}
+          >
+            Xác nhận
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for Success */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: "100%" }}>
+          Đơn hàng đã được phân công thành công!
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

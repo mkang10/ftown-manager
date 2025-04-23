@@ -1,6 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Divider, Paper, Button, Snackbar, Alert } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Divider,
+  Paper,
+  Button,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ProductVariantDialogSelect from "./ProductVariantDialogSelect";
 import VariantRow from "./VariantRow";
@@ -24,15 +32,14 @@ const CreateInventoryImportModalForm: React.FC<CreateInventoryImportModalFormPro
   loading,
   onQuantityChange,
 }) => {
-  const [openDialog, setOpenDialog] = useState<boolean>(false);
-  const [selectedRow, setSelectedRow] = useState<number>(0);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(0);
   const [productDisplayArray, setProductDisplayArray] = useState<string[]>(
     formData.importDetails.map(() => "")
   );
-  const [notification, setNotification] = useState<string>("");
+  const [notification, setNotification] = useState("");
 
   useEffect(() => {
-    // Đồng bộ mảng hiển thị với số dòng importDetails
     setProductDisplayArray((prev) => {
       const newArray = [...prev];
       while (newArray.length < formData.importDetails.length) {
@@ -45,7 +52,6 @@ const CreateInventoryImportModalForm: React.FC<CreateInventoryImportModalFormPro
     });
   }, [formData.importDetails.length]);
 
-  // Hàm thêm dòng mới: mỗi row luôn có storeDetails với handleBy
   const handleAddRow = () => {
     let defaultWareHouseId = 0;
     let defaultHandleBy = 0;
@@ -57,7 +63,7 @@ const CreateInventoryImportModalForm: React.FC<CreateInventoryImportModalFormPro
     }
     const newRow = {
       productVariantId: 0,
-      unitPrice: 0,
+      costPrice: 0,
       quantity: 0,
       storeDetails: [
         {
@@ -70,7 +76,6 @@ const CreateInventoryImportModalForm: React.FC<CreateInventoryImportModalFormPro
     onChange({ ...formData, importDetails: [...formData.importDetails, newRow] });
   };
 
-  // Hàm xóa dòng: chỉ cho phép xóa nếu có nhiều hơn 1 row
   const handleRemoveRow = (rowIndex: number) => {
     if (formData.importDetails.length === 1) return;
     const newDetails = formData.importDetails.filter((_, idx) => idx !== rowIndex);
@@ -78,36 +83,28 @@ const CreateInventoryImportModalForm: React.FC<CreateInventoryImportModalFormPro
     setProductDisplayArray((prev) => prev.filter((_, idx) => idx !== rowIndex));
   };
 
-  // Mở dialog chọn variant cho dòng được chọn
   const handleOpenDialog = (rowIndex: number) => {
     setSelectedRow(rowIndex);
     setOpenDialog(true);
   };
 
-  // Khi chọn variant từ dialog
   const handleVariantSelect = (variant: productVariant) => {
     const selectedRowData = formData.importDetails[selectedRow];
-
-    // Kiểm tra xem có row nào (khác selectedRow) đã có variantId giống nhau không
     const duplicateRowIndex = formData.importDetails.findIndex(
       (detail, idx) => idx !== selectedRow && detail.productVariantId === variant.variantId
     );
 
     if (duplicateRowIndex !== -1) {
-      // Nếu có row trùng: gộp giá trị của selectedRowData vào row duplicate
       const duplicateRow = formData.importDetails[duplicateRowIndex];
-
-      const mergedUnitPrice = duplicateRow.unitPrice + selectedRowData.unitPrice;
+      const mergedCostPrice = duplicateRow.costPrice + selectedRowData.costPrice;
       const mergedQuantity = duplicateRow.quantity + selectedRowData.quantity;
       const mergedStoreDetails = duplicateRow.storeDetails.map((store, i) => {
-        // Giả sử chỉ xử lý phần tử đầu tiên trong storeDetails
         if (i === 0) {
           return {
             ...store,
             allocatedQuantity:
               store.allocatedQuantity +
               selectedRowData.storeDetails[0].allocatedQuantity,
-            // Giữ nguyên handleBy của store đã có (hoặc có thể cập nhật nếu cần)
           };
         }
         return store;
@@ -116,26 +113,21 @@ const CreateInventoryImportModalForm: React.FC<CreateInventoryImportModalFormPro
       const updatedDuplicateRow = {
         ...duplicateRow,
         productVariantId: variant.variantId,
-        unitPrice: mergedUnitPrice,
+        costPrice: mergedCostPrice,
         quantity: mergedQuantity,
         storeDetails: mergedStoreDetails,
       };
 
-      // Loại bỏ row đang được chọn và cập nhật row duplicate
       const newDetails = formData.importDetails.filter((_, idx) => idx !== selectedRow);
       newDetails[duplicateRowIndex] = updatedDuplicateRow;
 
-      // Cập nhật mảng hiển thị sản phẩm tương ứng
       const newDisplayArray = productDisplayArray.filter((_, idx) => idx !== selectedRow);
       newDisplayArray[duplicateRowIndex] = `${variant.productName} - ${variant.sizeName} - ${variant.colorName}`;
 
       onChange({ ...formData, importDetails: newDetails });
       setProductDisplayArray(newDisplayArray);
-
-      // Hiển thị thông báo
-      setNotification("Sản phẩm đã được chọn");
+      setNotification("Sản phẩm đã được gộp vào dòng hiện có.");
     } else {
-      // Nếu không có trùng: cập nhật row đang chọn
       const newDetails = formData.importDetails.map((detail, idx) =>
         idx === selectedRow ? { ...detail, productVariantId: variant.variantId } : detail
       );
@@ -146,88 +138,90 @@ const CreateInventoryImportModalForm: React.FC<CreateInventoryImportModalFormPro
         return newArray;
       });
     }
+
     onProductVariantChange(variant.variantId, selectedRow);
     setOpenDialog(false);
   };
 
-  // Cập nhật unit price của một row cụ thể
-  const handleUnitPriceChange = (index: number, value: number) => {
+  const handleCostPriceChange = (index: number, value: number) => {
+    const newDetails = formData.importDetails.map((d, i) =>
+      i === index ? { ...d, costPrice: value } : d
+    );
+    onChange({ ...formData, importDetails: newDetails });
+  };
+
+  const handleQuantityChange = (index: number, value: number) => {
     const newDetails = formData.importDetails.map((d, i) => {
       if (i === index) {
-        return { ...d, unitPrice: value };
+        const newStoreDetails = d.storeDetails.length === 1
+          ? d.storeDetails.map((store) => ({ ...store, allocatedQuantity: value }))
+          : d.storeDetails;
+        return { ...d, quantity: value, storeDetails: newStoreDetails };
       }
       return d;
     });
     onChange({ ...formData, importDetails: newDetails });
+    onQuantityChange(index, value);
   };
 
-  // Cập nhật quantity và đồng bộ allocatedQuantity của row tương ứng
-  // Cập nhật tổng quantity.
-// Nếu chỉ có 1 store thì đồng bộ allocatedQuantity = quantity,
-// nếu nhiều store thì để VariantRow quản lý phân phối.
-const handleQuantityChange = (index: number, value: number) => {
-  const newDetails = formData.importDetails.map((d, i) => {
-    if (i === index) {
-      let newStoreDetails;
-      if (d.storeDetails.length === 1) {
-        // Nếu chỉ có 1 warehouse thì gán allocatedQuantity = value
-        newStoreDetails = d.storeDetails.map((store) => ({ ...store, allocatedQuantity: value }));
-      } else {
-        newStoreDetails = d.storeDetails;
-      }
-      return { ...d, quantity: value, storeDetails: newStoreDetails };
-    }
-    return d;
-  });
-  onChange({ ...formData, importDetails: newDetails });
-  onQuantityChange(index, value);
-};
-
-
-  // Đóng thông báo
-  const handleCloseNotification = () => {
-    setNotification("");
-  };
+  const handleCloseNotification = () => setNotification("");
 
   return (
-    <Paper sx={{ p: 3, mb: 3 }} elevation={0}>
-      <Box
-        component="form"
-        onSubmit={onSubmit}
-        sx={{ display: "flex", flexDirection: "column", gap: 3 }}
-      >
-        <Typography variant="h6">Basic Information</Typography>
+    <Paper sx={{
+      p: 4,
+      mb: 4,
+      backgroundColor: "#f9f9f9",
+      border: "1px solid #e0e0e0",
+      borderRadius: 4
+    }}>
+      <Box component="form" onSubmit={onSubmit} sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <Typography variant="h5" sx={{ fontWeight: 600, color: "#111" }}>
+          Thông tin nhập kho
+        </Typography>
+
         {formData.importDetails.map((detail, index) => (
           <VariantRow
             key={index}
             index={index}
-            unitPrice={detail.unitPrice}
+            costPrice={detail.costPrice}
             quantity={detail.quantity}
             allocatedQuantity={detail.storeDetails[0].allocatedQuantity}
             productDisplay={detail.productVariantId ? productDisplayArray[index] : ""}
             onVariantClick={handleOpenDialog}
-            onUnitPriceChange={handleUnitPriceChange}
+            oncostPriceChange={handleCostPriceChange}
             onQuantityChange={handleQuantityChange}
             onRemoveRow={handleRemoveRow}
           />
         ))}
+
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddRow}>
-            Add Variant
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={handleAddRow}
+            sx={{
+              color: "#000",
+              borderColor: "#000",
+              "&:hover": {
+                backgroundColor: "#000",
+                color: "#fff",
+              },
+            }}
+          >
+            Thêm sản phẩm
           </Button>
         </Box>
-        <Divider />
+
+        <Divider sx={{ mt: 3, borderColor: "#ccc" }} />
       </Box>
+
       <ProductVariantDialogSelect
         open={openDialog}
         onClose={() => setOpenDialog(false)}
         onSelect={handleVariantSelect}
       />
-      <Snackbar
-        open={notification !== ""}
-        autoHideDuration={3000}
-        onClose={handleCloseNotification}
-      >
+
+      <Snackbar open={notification !== ""} autoHideDuration={3000} onClose={handleCloseNotification}>
         <Alert onClose={handleCloseNotification} severity="info" sx={{ width: "100%" }}>
           {notification}
         </Alert>

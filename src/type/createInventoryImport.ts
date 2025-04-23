@@ -6,7 +6,7 @@ export interface InventoryImportCreateRequest {
   originalImportId: number | null;
   importDetails: {
     productVariantId: number;
-    unitPrice: number;
+    costPrice: number;
     quantity: number;
     storeDetails: { wareHouseId: number; allocatedQuantity: number;handleBy: number }[];
   }[];

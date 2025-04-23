@@ -1,10 +1,8 @@
-// components/layout/DashboardStaffShell.tsx
-'use client';
+"use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  FiMenu,
-  FiLogOut,
   FiHome,
   FiShoppingCart,
   FiCheckCircle,
@@ -18,179 +16,131 @@ import {
 import SidebarItem from "@/components/Sidebar/SidebarItem";
 import SidebarDropdown from "@/components/Sidebar/SidebarDropdown";
 import Navbar from "@/components/Navbar/Navbar";
-import { useRouter } from "next/navigation";
 
 interface DashboardStaffShellProps {
   children: React.ReactNode;
 }
 
-export default function DashboardStaffShell({
-  children,
-}: DashboardStaffShellProps) {
+export default function DashboardStaffShell({ children }: DashboardStaffShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.clear();
-    router.push("/");
+    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+      localStorage.clear();
+      router.push("/");
+    }
   };
 
   return (
-    <div className="relative min-h-screen w-full">
-      {/* Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/assets/office.avif')" }}
-      />
-      <div className="absolute inset-0 bg-black/40" />
-
-      {/* Wrapper */}
-      <div className="relative flex min-h-screen text-gray-900">
-        {/* SIDEBAR */}
-        <aside
-          className={`
-            ${isSidebarOpen ? "w-64" : "w-20"}
-            bg-white/70 backdrop-blur-md shadow-lg flex flex-col
-            transition-all duration-300 rounded-r-2xl
-          `}
-        >
-          {/* Brand/Logo */}
-          <div className="flex items-center justify-between p-4 border-b border-white/30">
-            {isSidebarOpen ? (
-              <span className="text-xl font-bold">Staff Dashboard</span>
-            ) : (
-              <span className="text-xl font-bold">SD</span>
+    <div className="flex min-h-screen bg-white text-black">
+      {/* Sidebar */}
+      <aside className={`${isSidebarOpen ? "w-56" : "w-16"} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}>
+        {/* Logo & Toggle */}
+        <div className="flex items-center justify-between px-4 py-4">
+          <div className="flex items-center space-x-2">
+            <img
+              src="/assets/logo.avif"
+              alt="Funkytown Logo"
+              className="h-8 w-8 object-contain cursor-pointer"
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+            />
+            {isSidebarOpen && (
+              <span className="text-xl font-extrabold text-black tracking-tight">
+                FUNKYTOWN
+              </span>
             )}
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="text-gray-600 hover:text-black focus:outline-none"
-            >
-              <FiMenu />
-            </button>
           </div>
-
-          {/* Menu */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            <SidebarItem
-              icon={<FiHome />}
-              label="Dashboard"
-              isOpen={isSidebarOpen}
-              route="/staff-dashboard"
-            />
-
-            <SidebarDropdown
-              id="warehouses"
-              icon={<FiClipboard />}
-              label="Warehouses"
-              isOpen={isSidebarOpen}
-              subItems={[
-                { label: "Import Requests", route: "/staff-import-requests" },
-                { label: "Dispatch Requests", route: "/staff-dispatch-request" },
-              ]}
-              activeDropdown={activeDropdown}
-              setActiveDropdown={setActiveDropdown}
-            />
-
-            <SidebarDropdown
-              id="orders"
-              icon={<FiShoppingCart />}
-              label="Orders"
-              isOpen={isSidebarOpen}
-              subItems={[
-                { label: "Receive Orders", route: "/orders/receive" },
-                { label: "Confirm Orders", route: "/order/order-confirm" },
-              ]}
-              activeDropdown={activeDropdown}
-              setActiveDropdown={setActiveDropdown}
-            />
-
-            <SidebarDropdown
-              id="packing"
-              icon={<FiCheckCircle />}
-              label="Packing"
-              isOpen={isSidebarOpen}
-              subItems={[{ label: "Pack & Update Status", route: "/staff/packing" }]}
-              activeDropdown={activeDropdown}
-              setActiveDropdown={setActiveDropdown}
-            />
-
-            <SidebarDropdown
-              id="delivery"
-              icon={<FiTruck />}
-              label="Delivery"
-              isOpen={isSidebarOpen}
-              subItems={[{ label: "Track Deliveries", route: "/staff/delivery" }]}
-              activeDropdown={activeDropdown}
-              setActiveDropdown={setActiveDropdown}
-            />
-
-            <SidebarDropdown
-              id="returns"
-              icon={<FiRotateCcw />}
-              label="Returns"
-              isOpen={isSidebarOpen}
-              subItems={[
-                { label: "Return Requests", route: "/staff/returns/requests" },
-                { label: "Process Returns", route: "/staff/returns/process" },
-              ]}
-              activeDropdown={activeDropdown}
-              setActiveDropdown={setActiveDropdown}
-            />
-
-            <SidebarItem
-              icon={<FiMessageSquare />}
-              label="Customer Feedback"
-              isOpen={isSidebarOpen}
-              route="/staff/feedback"
-            />
-
-            <SidebarDropdown
-              id="reports"
-              icon={<FiTrendingUp />}
-              label="Reports"
-              isOpen={isSidebarOpen}
-              subItems={[
-                { label: "Statistical Reports", route: "/staff/reports/statistics" },
-              ]}
-              activeDropdown={activeDropdown}
-              setActiveDropdown={setActiveDropdown}
-            />
-
-            <SidebarDropdown
-              id="imports"
-              icon={<FiBox />}
-              label="Imports"
-              isOpen={isSidebarOpen}
-              subItems={[{ label: "Goods Import", route: "/staff/imports" }]}
-              activeDropdown={activeDropdown}
-              setActiveDropdown={setActiveDropdown}
-            />
-          </nav>
-
-          {/* Logout */}
-          <div className="p-4 border-t border-white/30">
-            <div
-              onClick={handleLogout}
-              className="flex items-center text-gray-800 hover:bg-white/40 p-2 rounded-md cursor-pointer transition-colors"
-            >
-              <div className="text-xl mr-2">
-                <FiLogOut />
-              </div>
-              {isSidebarOpen && <span className="text-sm font-medium">Logout</span>}
-            </div>
-          </div>
-        </aside>
-
-        {/* MAIN CONTENT */}
-        <div className="flex flex-col flex-1 ml-3">
-          <Navbar />
-          <main className="overflow-y-auto flex-1 p-2 sm:p-4 md:p-6 -ml-2">
-            <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-lg p-4 md:p-6 min-h-full">
-              {children}
-            </div>
-          </main>
         </div>
+
+        {/* Menu Items */}
+        <nav className="flex-1 overflow-y-auto py-4">
+          <SidebarItem icon={<FiHome />} label="Trang Chủ" isOpen={isSidebarOpen} route="/staff-dashboard" />
+          <SidebarDropdown
+            id="warehouses"
+            icon={<FiClipboard />}
+            label="Kho Hàng"
+            isOpen={isSidebarOpen}
+            subItems={[
+              { label: "Yêu Cầu Nhập", route: "/staff-import-requests" },
+              { label: "Yêu Cầu Xuất", route: "/staff-dispatch-request" },
+            ]}
+            activeDropdown={activeDropdown}
+            setActiveDropdown={setActiveDropdown}
+          />
+          <SidebarDropdown
+            id="orders"
+            icon={<FiShoppingCart />}
+            label="Đơn Hàng"
+            isOpen={isSidebarOpen}
+            subItems={[
+              { label: "Nhận Đơn", route: "/orders/receive" },
+              { label: "Xác Nhận Đơn", route: "/order/order-confirm" },
+            ]}
+            activeDropdown={activeDropdown}
+            setActiveDropdown={setActiveDropdown}
+          />
+          <SidebarDropdown
+            id="packing"
+            icon={<FiCheckCircle />}
+            label="Đóng Gói"
+            isOpen={isSidebarOpen}
+            subItems={[{ label: "Đóng Gói & Cập Nhật", route: "/staff/packing" }]}
+            activeDropdown={activeDropdown}
+            setActiveDropdown={setActiveDropdown}
+          />
+          <SidebarDropdown
+            id="delivery"
+            icon={<FiTruck />}
+            label="Giao Hàng"
+            isOpen={isSidebarOpen}
+            subItems={[{ label: "Theo Dõi", route: "/staff/delivery" }]}
+            activeDropdown={activeDropdown}
+            setActiveDropdown={setActiveDropdown}
+          />
+          <SidebarDropdown
+            id="returns"
+            icon={<FiRotateCcw />}
+            label="Hoàn Trả"
+            isOpen={isSidebarOpen}
+            subItems={[
+              { label: "Yêu Cầu", route: "/staff/returns/requests" },
+              { label: "Xử Lý", route: "/staff/returns/process" },
+            ]}
+            activeDropdown={activeDropdown}
+            setActiveDropdown={setActiveDropdown}
+          />
+          <SidebarItem icon={<FiMessageSquare />} label="Phản Hồi" isOpen={isSidebarOpen} route="/staff/feedback" />
+          <SidebarDropdown
+            id="reports"
+            icon={<FiTrendingUp />}
+            label="Báo Cáo"
+            isOpen={isSidebarOpen}
+            subItems={[{ label: "Thống Kê", route: "/staff/reports/statistics" }]}
+            activeDropdown={activeDropdown}
+            setActiveDropdown={setActiveDropdown}
+          />
+          <SidebarDropdown
+            id="imports"
+            icon={<FiBox />}
+            label="Nhập Hàng"
+            isOpen={isSidebarOpen}
+            subItems={[{ label: "Nhập Hàng", route: "/staff/imports" }]}
+            activeDropdown={activeDropdown}
+            setActiveDropdown={setActiveDropdown}
+          />
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        <Navbar />
+        <main className="p-6 flex-1">
+          <div className="rounded-xl border border-gray-100 p-6">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

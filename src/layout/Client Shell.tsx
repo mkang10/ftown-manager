@@ -1,6 +1,5 @@
 "use client"
 import React, { useState } from "react";
-import Image from "next/image";
 import {
   FiMenu,
   FiLogOut,
@@ -26,51 +25,48 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const router = useRouter();
 
-  // Handler cho logout: xoá localStorage và điều hướng về trang chủ
   const handleLogout = () => {
     localStorage.clear();
     router.push("/");
   };
 
   return (
-    <div className="relative min-h-screen w-full">
-      {/* Background */}
+    <div className="relative min-h-screen w-full font-sans">
+      {/* Background gradient subtle */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/assets/office.avif')" }}
+        className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-gray-100"
       />
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black/10" />
 
-      {/* Wrapper */}
-      <div className="relative flex min-h-screen text-gray-900">
-        {/* SIDEBAR */}
+      <div className="relative flex min-h-screen text-gray-700">
+        {/* Sidebar */}
         <aside
-          className={`
-            ${isSidebarOpen ? "w-64" : "w-20"} 
-            bg-white/70 backdrop-blur-md shadow-lg flex flex-col 
-            transition-all duration-300 rounded-r-2xl
-          `}
+          className={`${isSidebarOpen ? "w-64" : "w-20"
+            } bg-white/70 backdrop-blur-lg shadow-lg flex flex-col transition-width duration-300 rounded-r-2xl`}
         >
-          {/* Brand/Logo */}
-          <div className="flex items-center justify-between p-4 border-b border-white/30">
-            {isSidebarOpen ? (
-              <span className="text-xl font-bold">Shop Manager</span>
-            ) : (
-              <span className="text-xl font-bold">SM</span>
-            )}
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="text-gray-600 hover:text-black focus:outline-none"
-            >
-              <FiMenu />
-            </button>
+          {/* Logo và toggle */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+            <div className="flex items-center space-x-2">
+              <img
+                src="/assets/logo.avif"
+                alt="Funkytown Logo"
+                className="h-8 w-8 object-contain cursor-pointer"
+                onClick={() => setIsSidebarOpen((prev) => !prev)} // Thêm sự kiện mở/đóng sidebar
+              />
+              {isSidebarOpen && (
+                <span className="text-xl font-extrabold text-black-600 tracking-tight">
+                  FUNKYTOWN
+                </span>
+              )}
+            </div>
           </div>
 
+
           {/* Menu */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-2">
             <SidebarItem
               icon={<FiHome />}
-              label="Dashboard"
+              label="Tổng Quan"
               isOpen={isSidebarOpen}
               route="/dashboard"
             />
@@ -78,12 +74,12 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
             <SidebarDropdown
               id="products"
               icon={<FiBox />}
-              label="Products"
+              label="Sản Phẩm"
               isOpen={isSidebarOpen}
               subItems={[
-                { label: "Add Product", route: "/products/add" },
-                { label: "Edit/Delete Products", route: "/products/edit" },
-                { label: "View Inventory", route: "/products/inventory" },
+                { label: "Thêm Sản Phẩm", route: "/products/add" },
+                { label: "Sửa / Xóa Sản Phẩm", route: "/products/edit" },
+                { label: "Xem Kho", route: "/products/inventory" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
@@ -92,12 +88,12 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
             <SidebarDropdown
               id="orders"
               icon={<FiShoppingCart />}
-              label="Orders"
+              label="Đơn Hàng"
               isOpen={isSidebarOpen}
               subItems={[
-                { label: "Order Assignment", route: "/order/order-assign" },
-                { label: "Delivery", route: "/order/delivery" },
-                { label: "Complaint Handling", route: "/order/complaints" },
+                { label: "Phân Công Đơn Hàng", route: "/order/order-assign" },
+                { label: "Giao Hàng", route: "/order/delivery" },
+                { label: "Xử Lý Khiếu Nại", route: "/order/complaints" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
@@ -106,24 +102,24 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
             <SidebarDropdown
               id="inventory"
               icon={<FiClipboard />}
-              label="Inventory Requests"
+              label="Yêu Cầu Kho"
               isOpen={isSidebarOpen}
               subItems={[
-                { label: "Inventory Import", route: "/inventory/import" },
-                { label: "Inventory Dispatch", route: "/inventory/dispatch" },
+                { label: "Nhập Kho", route: "/inventory/import" },
+                { label: "Xuất Kho", route: "/inventory/dispatch" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
             />
 
             <SidebarDropdown
-              id="Assignment"
+              id="assignment"
               icon={<FiUserCheck />}
-              label="Staff Assignment"
+              label="Phân Công Nhân Viên"
               isOpen={isSidebarOpen}
               subItems={[
-                { label: "Assign Import", route: "/assign/import" },
-                { label: "Assign Dispatch", route: "/assign/dispatch" },
+                { label: "Phân Công Nhập Kho", route: "/assign/import" },
+                { label: "Phân Công Xuất Kho", route: "/assign/dispatch" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
@@ -132,9 +128,11 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
             <SidebarDropdown
               id="promotions"
               icon={<FiTrendingUp />}
-              label="Promotions"
+              label="Khuyến Mãi"
               isOpen={isSidebarOpen}
-              subItems={[{ label: "Manage Promotions", route: "/promotions/manage" }]}
+              subItems={[
+                { label: "Quản Lý Khuyến Mãi", route: "/promotions/manage" },
+              ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
             />
@@ -142,36 +140,24 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
             <SidebarDropdown
               id="reports"
               icon={<FiSettings />}
-              label="Reports"
+              label="Báo Cáo"
               isOpen={isSidebarOpen}
               subItems={[
-                { label: "Sales Performance", route: "/reports/sales" },
-                { label: "Management Reports", route: "/reports/management" },
+                { label: "Hiệu Suất Bán Hàng", route: "/reports/sales" },
+                { label: "Báo Cáo Quản Trị", route: "/reports/management" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
             />
           </nav>
 
-          {/* Logout */}
-          <div className="p-4 border-t border-white/30">
-            <div
-              onClick={handleLogout}
-              className="flex items-center text-gray-800 hover:bg-white/40 p-2 rounded-md cursor-pointer transition-colors"
-            >
-              <div className="text-xl mr-2">
-                <FiLogOut />
-              </div>
-              {isSidebarOpen && <span className="text-sm font-medium">Logout</span>}
-            </div>
-          </div>
         </aside>
 
-        {/* MAIN CONTENT */}
-        <div className="flex flex-col flex-1 ml-3">
+        {/* Nội dung chính */}
+        <div className="flex flex-col flex-1 ml-2 md:ml-6">
           <Navbar />
-          <main className="overflow-y-auto flex-1 p-2 sm:p-4 md:p-6 -ml-2 ">
-            <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-lg p-4 md:p-6 min-h-full">
+          <main className="flex-1 overflow-y-auto p-4">
+            <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 min-h-full">
               {children}
             </div>
           </main>

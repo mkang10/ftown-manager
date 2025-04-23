@@ -7,7 +7,15 @@ import React, {
   useCallback,
 } from "react";
 import DashboardLayoutStaff from "@/layout/DashboardStaffLayout";
-import { Box, Paper, Typography, Button, Alert, Pagination } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  Alert,
+  Pagination,
+  useTheme,
+} from "@mui/material";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -16,7 +24,9 @@ import {
   StaffImportFilterDto,
   StaffInventoryImportStoreDetailDto,
 } from "@/type/importStaff";
-import StaffFilterForm, { StaffFilterFormData } from "@/components/_staffcomponent/_importreuquest/StaffFilterForm";
+import StaffFilterForm, {
+  StaffFilterFormData,
+} from "@/components/_staffcomponent/_importreuquest/StaffFilterForm";
 import StaffImportRequestTable from "@/components/_staffcomponent/_importreuquest/StaffImportRequestTable";
 import EmptyState from "@/components/_loading/EmptyState";
 
@@ -30,25 +40,27 @@ const defaultFilters = {
 };
 
 const ImportListRequest: React.FC = () => {
-  const [staffImportRequests, setStaffImportRequests] = useState<StaffInventoryImportStoreDetailDto[]>([]);
+  const [staffImportRequests, setStaffImportRequests] = useState<
+    StaffInventoryImportStoreDetailDto[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  // 1) Tạo initialFilters bằng useMemo, đọc localStorage 1 lần
+  const theme = useTheme();
+
   const initialFilters = useMemo<StaffImportFilterDto>(() => {
-    const stored = typeof window !== "undefined" && localStorage.getItem("account");
+    const stored =
+      typeof window !== "undefined" && localStorage.getItem("account");
     const staffId = stored
       ? JSON.parse(stored).roleDetails?.staffDetailId ?? 0
       : 0;
     return { ...defaultFilters, StaffDetailId: staffId };
   }, []);
 
-  // 2) Khởi tạo state filters từ initialFilters
   const [filters, setFilters] = useState<StaffImportFilterDto>(initialFilters);
 
-  // 3) Wrap fetchData trong useCallback, không phụ thuộc vào `filters`
   const fetchData = useCallback(
     async (customFilters: StaffImportFilterDto, skipLoading = false) => {
       if (!skipLoading) setLoading(true);
@@ -65,10 +77,10 @@ const ImportListRequest: React.FC = () => {
           setStaffImportRequests(response.data.data);
           setTotalCount(response.data.totalRecords);
         } else {
-          setError(response.message || "Error fetching data");
+          setError(response.message || "Lỗi khi tải dữ liệu");
         }
       } catch (err) {
-        setError("Error occurred while fetching data.");
+        setError("Đã xảy ra lỗi khi tải dữ liệu.");
       } finally {
         setLoading(false);
       }
@@ -76,12 +88,10 @@ const ImportListRequest: React.FC = () => {
     []
   );
 
-  // 4) Chỉ gọi fetchData(initialFilters) trong effect, deps = [fetchData, initialFilters]
   useEffect(() => {
     fetchData(initialFilters);
   }, [fetchData, initialFilters]);
 
-  // refresh, filter, pagination, sort handlers
   const refreshData = () => fetchData(filters, true);
 
   const handleFilterSubmit = (data: StaffFilterFormData) => {
@@ -98,7 +108,12 @@ const ImportListRequest: React.FC = () => {
   };
 
   const handleSortChange = (sortField: string, isDescending: boolean) => {
-    const nf = { ...filters, SortBy: sortField, IsDescending: isDescending, Page: 1 };
+    const nf = {
+      ...filters,
+      SortBy: sortField,
+      IsDescending: isDescending,
+      Page: 1,
+    };
     setFilters(nf);
     fetchData(nf);
   };
@@ -106,43 +121,65 @@ const ImportListRequest: React.FC = () => {
   const totalPages = Math.ceil(totalCount / (filters.PageSize || 10));
 
   return (
-    <>
-      <Box sx={{ p: { xs: 2, md: 4 } }}>
-        <Paper sx={{ p: 3, mb: 2 }}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 2,
-            }}
+    <Box sx={{ p: { xs: 2, md: 4 }, backgroundColor: "#f7f7f7", minHeight: "100vh" }}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
+          mb: 2,
+          backgroundColor: "#fff",
+          borderRadius: 3,
+          border: "1px solid #000",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            sx={{ fontFamily: "'Roboto Slab', serif", color: "#000" }}
           >
-            <Typography variant="h5" fontWeight="bold">
-              Staff Inventory Import Requests
-            </Typography>
-            <Button variant="outlined" onClick={() => setFilterOpen(true)}>
-              Filter
-            </Button>
-          </Box>
-        </Paper>
+            Yêu cầu nhập kho của nhân viên
+          </Typography>
+          <Button
+            variant="outlined"
+            sx={{
+              color: "#000",
+              borderColor: "#000",
+              fontWeight: 600,
+              ":hover": {
+                backgroundColor: "#000",
+                color: "#fff",
+              },
+            }}
+            onClick={() => setFilterOpen(true)}
+          >
+            Bộ lọc
+          </Button>
+        </Box>
+      </Paper>
 
-        {error && <Alert severity="error">{error}</Alert>}
+      {error && <Alert severity="error">{error}</Alert>}
 
-        {!loading && staffImportRequests.length === 0 ? (
-          <EmptyState loading={false} />
-        ) : (
-          <StaffImportRequestTable
-  items={staffImportRequests}
-  loading={loading}
-  onSortChange={handleSortChange}
-  sortBy={filters.SortBy ?? "importStoreId"}      // fallback thành "importStoreId"
-  isDescending={filters.IsDescending ?? false}     // fallback thành false
-  refreshData={refreshData}
-/>
-
-        )}
-      </Box>
+      {!loading && staffImportRequests.length === 0 ? (
+        <EmptyState loading={false} />
+      ) : (
+        <StaffImportRequestTable
+          items={staffImportRequests}
+          loading={loading}
+          onSortChange={handleSortChange}
+          sortBy={filters.SortBy ?? "importStoreId"}
+          isDescending={filters.IsDescending ?? false}
+          refreshData={refreshData}
+        />
+      )}
 
       <StaffFilterForm
         open={filterOpen}
@@ -157,10 +194,13 @@ const ImportListRequest: React.FC = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: "white",
+          backgroundColor: "#fff",
           py: 2,
           boxShadow: 3,
           zIndex: 1300,
+          display: "flex",
+          justifyContent: "center",
+          borderTop: "1px solid #000",
         }}
       >
         <Pagination
@@ -172,7 +212,7 @@ const ImportListRequest: React.FC = () => {
       </Box>
 
       <ToastContainer />
-    </>
+    </Box>
   );
 };
 

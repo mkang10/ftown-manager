@@ -46,7 +46,7 @@ const ProductVariantDialogSelect: React.FC<ProductVariantDialogSelectProps> = ({
           setVariants(result.data);
           setTotalRecords(result.totalRecords);
         } catch (error) {
-          setError("Error loading product variants");
+          setError("Không thể tải danh sách sản phẩm.");
         } finally {
           setLoading(false);
         }
@@ -70,50 +70,94 @@ const ProductVariantDialogSelect: React.FC<ProductVariantDialogSelectProps> = ({
       onClose={onClose}
       fullWidth
       maxWidth="sm"
-      PaperProps={{ sx: { p: 2, height: 400 } }}
+      PaperProps={{
+        sx: {
+          p: 2,
+          backgroundColor: "#fff",
+          borderRadius: 2,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        },
+      }}
     >
-      <DialogTitle>Select Product Variant</DialogTitle>
-      <DialogContent dividers>
+      <DialogTitle sx={{ fontWeight: 600, fontSize: "1.25rem", color: "#111" }}>
+        Chọn sản phẩm
+      </DialogTitle>
+
+      <DialogContent dividers sx={{ px: 1.5, py: 1 }}>
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-            <CircularProgress size={24} />
+          <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+            <CircularProgress size={28} color="inherit" />
           </Box>
         ) : error ? (
-          <Typography variant="body2" color="error">
+          <Typography variant="body2" color="error" sx={{ px: 1 }}>
             {error}
           </Typography>
         ) : variants.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            No variants available.
+          <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>
+            Không có sản phẩm nào.
           </Typography>
         ) : (
           <>
             <List>
               {variants.map((variant) => (
                 <ListItem key={variant.variantId} disableGutters>
-                  <ListItemButton onClick={() => handleSelect(variant)}>
+                  <ListItemButton
+                    onClick={() => handleSelect(variant)}
+                    sx={{
+                      px: 2,
+                      py: 1,
+                      borderRadius: 2,
+                      "&:hover": {
+                        backgroundColor: "#f5f5f5",
+                      },
+                    }}
+                  >
                     <ListItemAvatar>
                       <Avatar
                         src={variant.mainImagePath}
                         alt={variant.productName}
-                        sx={{ width: 40, height: 40, mr: 1 }}
+                        sx={{
+                          width: 42,
+                          height: 42,
+                          border: "1px solid #ccc",
+                          mr: 2,
+                        }}
                       />
                     </ListItemAvatar>
                     <ListItemText
-                      primary={variant.productName}
-                      secondary={`${variant.sizeName} - ${variant.colorName}`}
+                      primary={
+                        <Typography sx={{ fontWeight: 500, color: "#111" }}>
+                          {variant.productName}
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography variant="body2" color="text.secondary">
+                          {variant.sizeName} - {variant.colorName}
+                        </Typography>
+                      }
                     />
                   </ListItemButton>
                 </ListItem>
               ))}
             </List>
+
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <Pagination
                 count={Math.ceil(totalRecords / pageSize)}
                 page={page}
                 onChange={handlePageChange}
                 size="small"
-                color="primary"
+                shape="rounded"
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    color: "#111",
+                    borderColor: "#ccc",
+                  },
+                  "& .Mui-selected": {
+                    backgroundColor: "#111",
+                    color: "#fff",
+                  },
+                }}
               />
             </Box>
           </>

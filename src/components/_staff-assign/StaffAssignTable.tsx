@@ -1,23 +1,25 @@
-"use client";
-import React from "react";
-import { Table, TableHead, TableRow, TableCell, TableBody, Button } from "@mui/material";
-import { InventoryImportItem } from "@/type/InventoryImport";
+'use client';
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "pending":
-      return "grey.500"; 
-    case "Approved":
-      return "success.main"; 
-    case "rejected":
-      return "error.main";   
-    case "Processing":
-      return "#ffee33";
-    case "done":
-      return "#00695c";
-    default:
-      return "grey.500";  
-  }
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { Table, TableHead, TableRow, TableCell, TableBody, Paper, styled, Button, Box } from '@mui/material';
+import { InventoryImportItem } from '@/type/InventoryImport';
+
+// Mapping trạng thái sang màu và nhãn tiếng Việt
+const STATUS_COLOR: Record<string, string> = {
+  pending: 'grey.500',
+  Approved: 'success.main',
+  rejected: 'error.main',
+  Processing: '#ffee33',
+  done: '#00695c',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'pending',
+  Approved: 'Approved',
+  rejected: 'rejected',
+  Processing: 'Đang xử lý',
+  done: 'done',
 };
 
 interface StaffAssignTableProps {
@@ -25,50 +27,95 @@ interface StaffAssignTableProps {
   onAssign: (importId: number) => void;
 }
 
+const TableContainer = styled(Paper)(({ theme }) => ({
+  backgroundColor: '#fff',
+  color: '#000',
+  border: '1px solid #000',
+  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+  borderRadius: theme.shape.borderRadius * 2,
+  overflowX: 'auto',
+}));
+
+const HeaderCell = styled(TableCell)(() => ({
+  fontWeight: 'bold',
+  borderBottom: '2px solid #000',
+}));
+
+const BodyRow = styled(TableRow)(() => ({
+  cursor: 'pointer',
+  transition: 'background-color 0.2s',
+  '&:hover': {
+    backgroundColor: '#f9f9f9',
+  },
+}));
+
+const AssignButton = styled(Button)(() => ({
+  textTransform: 'none',
+  backgroundColor: '#000',
+  color: '#fff',
+  '&:hover': {
+    backgroundColor: '#333',
+  },
+}));
+
 const StaffAssignTable: React.FC<StaffAssignTableProps> = ({ items, onAssign }) => {
+  const router = useRouter();
+
+  const handleRowClick = (importId: number) => {
+    router.push(`/assign/import/${importId}`);
+  };
+
   return (
-    <Table sx={{ backgroundColor: "white" }}>
-      <TableHead>
-        <TableRow>
-          <TableCell>Import Id</TableCell>
-          <TableCell>Created By Name</TableCell>
-          <TableCell>Email</TableCell>
-          <TableCell>Created Date</TableCell>
-          <TableCell>Status</TableCell>
-          <TableCell>Reference Number</TableCell>
-          <TableCell>Total Cost</TableCell>
-          <TableCell>Approved Date</TableCell>
-          <TableCell>Completed Date</TableCell>
-          <TableCell>Action</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {items.map((item) => (
-          <TableRow key={item.importId}>
-            <TableCell>{item.importId}</TableCell>
-            <TableCell>{item.createdByName}</TableCell>
-            <TableCell>{item.email || "-"}</TableCell>
-            <TableCell>{new Date(item.createdDate).toLocaleDateString()}</TableCell>
-            <TableCell sx={{ color: getStatusColor(item.status), fontWeight: "bold" }}>
-              {item.status}
-            </TableCell>
-            <TableCell>{item.referenceNumber}</TableCell>
-            <TableCell>{item.totalCost}</TableCell>
-            <TableCell>
-              {item.approvedDate ? new Date(item.approvedDate).toLocaleDateString() : "-"}
-            </TableCell>
-            <TableCell>
-              {item.completedDate ? new Date(item.completedDate).toLocaleDateString() : "-"}
-            </TableCell>
-            <TableCell>
-              <Button variant="contained" size="small" onClick={() => onAssign(item.importId)}>
-                Assign
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <TableContainer>
+      <Box sx={{ minWidth: 800 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <HeaderCell align="center">Mã phiếu</HeaderCell>
+              <HeaderCell>Người tạo</HeaderCell>
+              <HeaderCell>Email</HeaderCell>
+              <HeaderCell>Ngày tạo</HeaderCell>
+              <HeaderCell>Trạng thái</HeaderCell>
+              <HeaderCell>Số tham chiếu</HeaderCell>
+              <HeaderCell align="right">Tổng chi phí</HeaderCell>
+              <HeaderCell>Ngày duyệt</HeaderCell>
+              <HeaderCell>Ngày hoàn thành</HeaderCell>
+              <HeaderCell align="center">Thao tác</HeaderCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {items.map((item) => (
+              <BodyRow key={item.importId} onClick={() => handleRowClick(item.importId)}>
+                <TableCell align="center">{item.importId}</TableCell>
+                <TableCell>{item.createdByName}</TableCell>
+                <TableCell>{item.email || '-'}</TableCell>
+                <TableCell>{new Date(item.createdDate).toLocaleDateString()}</TableCell>
+                <TableCell sx={{ color: STATUS_COLOR[item.status] || 'grey.500', fontWeight: 'bold' }}>
+                  {STATUS_LABEL[item.status] || item.status}
+                </TableCell>
+                <TableCell>{item.referenceNumber}</TableCell>
+                <TableCell align="right">{item.totalCost.toLocaleString('vi-VN')} VND</TableCell>
+                <TableCell>
+                  {item.approvedDate
+                    ? new Date(item.approvedDate).toLocaleDateString()
+                    : '-'}
+                </TableCell>
+                <TableCell>
+                  {item.completedDate
+                    ? new Date(item.completedDate).toLocaleDateString()
+                    : '-'}
+                </TableCell>
+                <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                  <AssignButton variant="contained" size="small" onClick={() => onAssign(item.importId)}>
+                    Gán
+                  </AssignButton>
+                </TableCell>
+              </BodyRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Box>
+    </TableContainer>
   );
 };
 

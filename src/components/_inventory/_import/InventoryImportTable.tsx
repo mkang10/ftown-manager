@@ -10,8 +10,8 @@ import {
   Paper,
   Box,
   TableSortLabel,
-  Typography,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import { InventoryImportItem } from "@/type/InventoryImport";
 import { useRouter } from "next/navigation";
@@ -43,64 +43,65 @@ const InventoryImportTable: React.FC<InventoryImportTableProps> = ({
   };
 
   return (
-    <Box sx={{ padding: 2 }}>
-      <Paper elevation={3} sx={{ borderRadius: "12px", overflow: "hidden" }}>
+    <Box sx={{ padding: 3, backgroundColor: '#fff' }}>
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: '16px',
+          backgroundColor: '#fff',
+          border: '1px solid #e0e0e0',
+        }}
+      >
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: "white" }}>
-                <TableCell align="center" sx={{ fontWeight: "bold", minWidth: 80 }}>
+              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>
                   <TableSortLabel
-                    active={sortBy === "ImportId"}
-                    direction={sortBy === "ImportId" ? (isDescending ? "desc" : "asc") : "asc"}
-                    onClick={createSortHandler("ImportId")}
+                    active={sortBy === 'ImportId'}
+                    direction={sortBy === 'ImportId' && isDescending ? 'desc' : 'asc'}
+                    onClick={createSortHandler('ImportId')}
                   >
-                    ID
+                    Mã nhập
                   </TableSortLabel>
                 </TableCell>
-                <TableCell align="center" sx={{ fontWeight: "bold", minWidth: 150 }}>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>
                   <TableSortLabel
-                    active={sortBy === "ReferenceNumber"}
-                    direction={sortBy === "ReferenceNumber" ? (isDescending ? "desc" : "asc") : "asc"}
-                    onClick={createSortHandler("ReferenceNumber")}
+                    active={sortBy === 'ReferenceNumber'}
+                    direction={sortBy === 'ReferenceNumber' && isDescending ? 'desc' : 'asc'}
+                    onClick={createSortHandler('ReferenceNumber')}
                   >
-                    Reference Number
+                    Mã tham chiếu
                   </TableSortLabel>
                 </TableCell>
-                <TableCell align="center" sx={{ fontWeight: "bold", minWidth: 150 }}>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>
                   <TableSortLabel
-                    active={sortBy === "CreatedByName"}
-                    direction={sortBy === "CreatedByName" ? (isDescending ? "desc" : "asc") : "asc"}
-                    onClick={createSortHandler("CreatedByName")}
+                    active={sortBy === 'CreatedByName'}
+                    direction={sortBy === 'CreatedByName' && isDescending ? 'desc' : 'asc'}
+                    onClick={createSortHandler('CreatedByName')}
                   >
-                    Created By
+                    Người tạo
                   </TableSortLabel>
                 </TableCell>
-                <TableCell align="center" sx={{ fontWeight: "bold", minWidth: 180 }}>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>
                   <TableSortLabel
-                    active={sortBy === "CreatedDate"}
-                    direction={sortBy === "CreatedDate" ? (isDescending ? "desc" : "asc") : "asc"}
-                    onClick={createSortHandler("CreatedDate")}
+                    active={sortBy === 'CreatedDate'}
+                    direction={sortBy === 'CreatedDate' && isDescending ? 'desc' : 'asc'}
+                    onClick={createSortHandler('CreatedDate')}
                   >
-                    Created Date
+                    Ngày tạo
                   </TableSortLabel>
                 </TableCell>
-                <TableCell align="center" sx={{ fontWeight: "bold", minWidth: 120 }}>
-                  <TableSortLabel
-                    active={sortBy === "Status"}
-                    direction={sortBy === "Status" ? (isDescending ? "desc" : "asc") : "asc"}
-                    onClick={createSortHandler("Status")}
-                  >
-                    Status
-                  </TableSortLabel>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>
+                  Trạng thái
                 </TableCell>
-                <TableCell align="center" sx={{ fontWeight: "bold", minWidth: 120 }}>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>
                   <TableSortLabel
-                    active={sortBy === "TotalCost"}
-                    direction={sortBy === "TotalCost" ? (isDescending ? "desc" : "asc") : "asc"}
-                    onClick={createSortHandler("TotalCost")}
+                    active={sortBy === 'TotalCost'}
+                    direction={sortBy === 'TotalCost' && isDescending ? 'desc' : 'asc'}
+                    onClick={createSortHandler('TotalCost')}
                   >
-                    Total Cost
+                    Tổng chi phí
                   </TableSortLabel>
                 </TableCell>
               </TableRow>
@@ -111,57 +112,57 @@ const InventoryImportTable: React.FC<InventoryImportTableProps> = ({
                   key={item.importId}
                   hover
                   sx={{
-                    cursor: "pointer",
-                    "&:hover": { backgroundColor: "action.hover" },
+                    cursor: 'pointer',
+                    '&:hover': { backgroundColor: '#fafafa' },
+                    transition: 'background-color 0.2s ease',
                   }}
                   onClick={() => handleRowClick(item.importId)}
                 >
-                  <TableCell align="center">{item.importId}</TableCell>
-                  <TableCell align="center">{item.referenceNumber}</TableCell>
-                  <TableCell align="center">{item.createdByName}</TableCell>
-                  <TableCell align="center">{new Date(item.createdDate).toLocaleString()}</TableCell>
                   <TableCell align="center">
-                    {item.status === "Partial Success" ? (
-                      <Tooltip title="This import has missing items">
-                        <Box
-                          sx={{
-                            backgroundColor: getStatusColor(item.status),
-                            color: "white",
-                            fontWeight: "bold",
-                            borderRadius: "12px",
-                            width: 150,
-                            height: 28,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            textAlign: "center",
-                            mx: "auto",
-                          }}
-                        >
-                          {item.status}
-                        </Box>
-                      </Tooltip>
-                    ) : (
+                    <Typography variant="body2" color="textPrimary">
+                      {item.importId}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Typography variant="body2" color="textPrimary">
+                      {item.referenceNumber}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Typography variant="body2" color="textPrimary">
+                      {item.createdByName}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Typography variant="body2" color="textPrimary">
+                      {new Date(item.createdDate).toLocaleString('vi-VN')}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Tooltip title={
+                      item.status === 'Partial Success' ? 'Phiếu nhập thiếu sản phẩm' : ''
+                    }>
                       <Box
                         sx={{
                           backgroundColor: getStatusColor(item.status),
-                          color: "white",
-                          fontWeight: "bold",
-                          borderRadius: "12px",
-                          width: 150,
-                          height: 28,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          textAlign: "center",
-                          mx: "auto",
+                          color: '#fff',
+                          fontWeight: 600,
+                          borderRadius: '8px',
+                          px: 2,
+                          py: 0.5,
+                          display: 'inline-block',
+                          fontSize: '0.875rem',
                         }}
                       >
                         {item.status}
                       </Box>
-                    )}
+                    </Tooltip>
                   </TableCell>
-                  <TableCell align="center">{item.totalCost}</TableCell>
+                  <TableCell align="center">
+                    <Typography variant="body2" color="textPrimary">
+                      {item.totalCost.toLocaleString('vi-VN')} VND
+                    </Typography>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

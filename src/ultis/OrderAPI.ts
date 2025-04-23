@@ -1,7 +1,8 @@
-import { OrderResponse } from "@/type/order";
+import { AssignmentOrderFilters, AssignmentOrderListResponse, OrderResponse } from "@/type/order";
 import shopmanagerclient from "./ShopmanagerClient";
 import { AssignStaffResponse } from "@/type/Staff";
 import { CompleteOrderResponse } from "@/type/completeOrder";
+import { AssignmentOrderResponse } from "@/type/orderdetail";
 
 export const getOrdersManager = async (
   page: number,
@@ -137,4 +138,51 @@ export const getOrdersStaff = async (
   }
 
   return response.data.data;
+};
+// src/api/orderClient.ts
+
+
+// GET: Lấy thông tin Assignment + Order theo ID
+export const getAssignmentOrderById = async (
+  assignmentId: number
+): Promise<AssignmentOrderResponse> => {
+  try {
+    const response = await shopmanagerclient.get<AssignmentOrderResponse>(
+      `/orders/${assignmentId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi tải thông tin đơn hàng:', error);
+    throw error;
+  }
+};
+
+export const getAssignmentStaffOrders = async (
+  filters: AssignmentOrderFilters
+): Promise<AssignmentOrderListResponse> => {
+  try {
+    const response = await shopmanagerclient.get<AssignmentOrderListResponse>(
+      '/orders',
+      { params: filters }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi tải danh sách đơn hàng:', error);
+    throw error;
+  }
+};
+
+export const getAssignmentManagerOrders = async (
+  filters: AssignmentOrderFilters
+): Promise<AssignmentOrderListResponse> => {
+  try {
+    const response = await shopmanagerclient.get<AssignmentOrderListResponse>(
+      '/orders',
+      { params: filters }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi tải danh sách đơn hàng:', error);
+    throw error;
+  }
 };

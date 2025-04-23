@@ -1,4 +1,3 @@
-import apiclient from "./apiclient";
 import { LoginRequest, LoginResponse } from "@/type/auth";
 import authclient from "./authclient";
 

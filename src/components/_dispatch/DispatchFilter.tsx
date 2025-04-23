@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -39,6 +39,10 @@ const FilterAssignDispatchDialog: React.FC<FilterDispatchDialogProps> = ({
 }) => {
   const [filters, setFilters] = useState<FilterData>(initialFilters);
 
+  useEffect(() => {
+    setFilters(initialFilters);
+  }, [initialFilters]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
@@ -50,73 +54,129 @@ const FilterAssignDispatchDialog: React.FC<FilterDispatchDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Lọc Dispatch</DialogTitle>
-      <DialogContent>
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={6}>
+      <DialogTitle
+        sx={{
+          fontWeight: 600,
+          fontSize: "1.25rem",
+          backgroundColor: "#fafafa",
+          borderBottom: "1px solid #e0e0e0",
+        }}
+      >
+        Bộ lọc Dispatch
+      </DialogTitle>
+      <DialogContent sx={{ pt: 3 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
             <TextField
-              label="DispatchDetailId"
+              label="Mã chi tiết Dispatch"
               name="DispatchDetailId"
               fullWidth
+              variant="outlined"
+              size="small"
               value={filters.DispatchDetailId || ""}
               onChange={handleChange}
             />
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={12} sm={6}>
             <TextField
-              label="WarehouseId"
+              label="Kho"
               name="WarehouseId"
               fullWidth
+              variant="outlined"
+              size="small"
               value={filters.WarehouseId || ""}
               onChange={handleChange}
             />
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={12} sm={6}>
             <TextField
-              label="StaffDetailId"
+              label="Mã nhân viên"
               name="StaffDetailId"
               fullWidth
+              variant="outlined"
+              size="small"
               value={filters.StaffDetailId || ""}
               onChange={handleChange}
             />
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={12} sm={6}>
             <TextField
-              label="HandleBy"
+              label="Người xử lý"
               name="HandleBy"
               fullWidth
+              variant="outlined"
+              size="small"
               value={filters.HandleBy || ""}
               onChange={handleChange}
             />
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={12} sm={6}>
             <TextField
-              label="Status"
+              label="Trạng thái"
               name="Status"
               select
               fullWidth
+              variant="outlined"
+              size="small"
               value={filters.Status || ""}
               onChange={handleChange}
             >
-              <MenuItem value="Approved">Approved</MenuItem>
-              <MenuItem value="Pending">Pending</MenuItem>
-              <MenuItem value="Rejected">Rejected</MenuItem>
+              <MenuItem value="Pending">Chờ duyệt</MenuItem>
+              <MenuItem value="Approved">Đã duyệt</MenuItem>
+              <MenuItem value="Rejected">Từ chối</MenuItem>
             </TextField>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={12} sm={6}>
             <TextField
-              label="Comments"
+              label="Ghi chú"
               name="Comments"
               fullWidth
+              variant="outlined"
+              size="small"
               value={filters.Comments || ""}
               onChange={handleChange}
             />
           </Grid>
         </Grid>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Hủy</Button>
-        <Button variant="contained" onClick={handleSubmit}>
+      <DialogActions
+        sx={{
+          px: 3,
+          py: 2,
+          borderTop: "1px solid #e0e0e0",
+          backgroundColor: "#fafafa",
+        }}
+      >
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            color: "#000",
+            borderColor: "#000",
+            backgroundColor: "#fff",
+            "&:hover": {
+              backgroundColor: "#f0f0f0",
+              borderColor: "#000",
+            },
+          }}
+        >
+          Hủy
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            backgroundColor: "#000",
+            color: "#fff",
+            "&:hover": {
+              backgroundColor: "#222",
+            },
+          }}
+        >
           Áp dụng
         </Button>
       </DialogActions>

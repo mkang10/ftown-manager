@@ -1,14 +1,20 @@
+"use client"; // Nếu bạn đang dùng App Router (Next.js 13+)
+
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // CHÍNH XÁC CHO APP ROUTER
 import { AppBar, Toolbar, IconButton, InputBase, Badge, Avatar, Menu, MenuItem, Paper } from "@mui/material";
 import { FiSearch, FiBell } from "react-icons/fi";
-import Image from "next/image";
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const [isClient, setIsClient] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
+    setIsClient(true); // Đảm bảo component chỉ chạy sau khi mounted
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -22,6 +28,13 @@ const Navbar: React.FC = () => {
     setAnchorEl(null);
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push("/"); // Chỉ chạy được nếu router đã được mount
+  };
+
+  if (!isClient) return null; // Tránh render trước khi client mounted
+
   return (
     <AppBar
       position="sticky"
@@ -34,10 +47,8 @@ const Navbar: React.FC = () => {
       }}
     >
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-        {/* Logo or Title */}
         <div style={{ fontWeight: "bold", fontSize: "18px", color: "#333" }}>Dashboard</div>
 
-        {/* Search Input */}
         <Paper
           component="form"
           sx={{
@@ -56,7 +67,6 @@ const Navbar: React.FC = () => {
           <InputBase sx={{ ml: 1, flex: 1 }} placeholder="Search..." />
         </Paper>
 
-        {/* Icons and User Profile */}
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <IconButton>
             <Badge badgeContent={3} color="error">
@@ -64,7 +74,6 @@ const Navbar: React.FC = () => {
             </Badge>
           </IconButton>
 
-          {/* User Avatar & Dropdown */}
           <IconButton onClick={handleMenuOpen}>
             <Avatar
               src="/assets/ava1.avif"
@@ -73,11 +82,10 @@ const Navbar: React.FC = () => {
             />
           </IconButton>
 
-          {/* Menu Dropdown */}
           <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
             <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
             <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
-            <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </div>
       </Toolbar>

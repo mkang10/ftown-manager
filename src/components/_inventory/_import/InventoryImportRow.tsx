@@ -1,44 +1,82 @@
 "use client";
 import React from "react";
-import { TableRow, TableCell, Chip } from "@mui/material";
+import { TableRow, TableCell, Chip, Typography } from "@mui/material";
 import { InventoryImportItem } from "@/type/InventoryImport";
 
 interface InventoryImportRowProps {
   item: InventoryImportItem;
 }
 
+// Bản đồ trạng thái sang nhãn và màu sắc
+const statusMap: Record<InventoryImportItem['status'], { label: string; color: 'default' | 'primary' | 'success' | 'error' | 'warning' | 'info' }> = {
+  Pending: { label: 'Chờ xử lý', color: 'warning' },
+  Approved: { label: 'Đã duyệt', color: 'success' },
+  Rejected: { label: 'Từ chối', color: 'error' },
+  Processing: { label: 'Đang xử lý', color: 'info' },
+  Done: { label: 'Hoàn thành', color: 'primary' },
+  'Partial Success': { label: 'Thành công một phần', color: 'warning' },
+  Success: { label: 'Thành công', color: 'success' },
+};
+
 const InventoryImportRow: React.FC<InventoryImportRowProps> = ({ item }) => {
-  // Xác định màu của Chip dựa trên status
-  let chipColor: "default" | "success" | "error" = "default";
-  if (item.status === "Approved") chipColor = "success";
-  else if (item.status === "Rejected") chipColor = "error";
+  const { label, color } = statusMap[item.status] || { label: item.status, color: 'default' };
 
   return (
     <TableRow
       hover
       sx={{
-        transition: "background-color 0.3s ease",
-        "&:hover": { backgroundColor: "grey.200" },
+        cursor: 'pointer',
+        transition: 'background-color 0.3s ease',
+        '&:hover': { backgroundColor: 'grey.100' },
       }}
     >
-      <TableCell>{item.importId}</TableCell>
-      <TableCell>{item.referenceNumber}</TableCell>
-      <TableCell>{item.createdByName}</TableCell>
-      <TableCell>{new Date(item.createdDate).toLocaleString()}</TableCell>
+      <TableCell>
+        <Typography variant="body2" color="text.primary">
+          {item.importId}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Typography variant="body2" color="text.primary">
+          {item.referenceNumber}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Typography variant="body2" color="text.primary">
+          {item.createdByName}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Typography variant="body2" color="text.primary">
+          {new Date(item.createdDate).toLocaleString('vi-VN')}
+        </Typography>
+      </TableCell>
       <TableCell>
         <Chip
-        size="small"
-          label={item.status}
-          color={chipColor}
-          sx={{ borderRadius: "16px", textTransform: "capitalize" }}
+          label={label}
+          color={color}
+          size="small"
+          variant="filled"
+          sx={{ borderRadius: '8px', fontWeight: 600 }}
         />
       </TableCell>
-      <TableCell>{item.totalCost}</TableCell>
       <TableCell>
-        {item.approvedDate ? new Date(item.approvedDate).toLocaleString() : "-"}
+        <Typography variant="body2" color="text.primary">
+          {item.totalCost.toLocaleString('vi-VN')}₫
+        </Typography>
       </TableCell>
       <TableCell>
-        {item.completedDate ? new Date(item.completedDate).toLocaleString() : "-"}
+        <Typography variant="body2" color="text.primary">
+          {item.approvedDate
+            ? new Date(item.approvedDate).toLocaleString('vi-VN')
+            : '-'}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Typography variant="body2" color="text.primary">
+          {item.completedDate
+            ? new Date(item.completedDate).toLocaleString('vi-VN')
+            : '-'}
+        </Typography>
       </TableCell>
     </TableRow>
   );

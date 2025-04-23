@@ -1,8 +1,11 @@
-// app/dispatch/DispatchClient.tsx
 'use client';
 
 import React, { useEffect, useState } from "react";
-import { Box, CircularProgress, Alert } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -44,7 +47,7 @@ const DispatchClient: React.FC = () => {
   const fetchData = async (
     f: DispatchFilterData,
     pg: number,
-    skipLoading?: boolean
+    skipLoading = false
   ) => {
     if (!skipLoading) setLoading(true);
     setError("");
@@ -62,7 +65,7 @@ const DispatchClient: React.FC = () => {
       setDispatches(resp.data);
       setTotalCount(resp.totalRecords);
     } catch (err: any) {
-      setError(err.message || "Có lỗi khi tải danh sách dispatch");
+      setError(err.message || "Đã xảy ra lỗi khi tải danh sách phiếu điều phối.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +85,7 @@ const DispatchClient: React.FC = () => {
 
   const refreshData = () => {
     fetchData(filters, page, true);
-    toast.success("Gán nhân viên thành công", { autoClose: 1000 });
+    toast.success("Làm mới thành công", { autoClose: 1000 });
   };
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -96,7 +99,7 @@ const DispatchClient: React.FC = () => {
         />
 
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
             <CircularProgress />
           </Box>
         ) : error ? (

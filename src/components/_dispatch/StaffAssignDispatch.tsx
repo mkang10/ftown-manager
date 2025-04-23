@@ -6,91 +6,211 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Box,
+  CircularProgress,
+  Avatar,
+  Typography,
+  Divider,
 } from "@mui/material";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 import { GetStaffNamesResponse, StaffName } from "@/type/Staff";
-import { assignDispatchStaffDetail, assignStaffDetail, getStaffNames } from "@/ultis/AssignAPI";
+import { assignDispatchStaffDetail, getStaffNames } from "@/ultis/AssignAPI";
 
 interface StaffAssignDialogProps {
   open: boolean;
-  dispatchId: number; // Dùng cho hàm assignStaffDetail như cũ
+  dispatchId: number;
   onClose: () => void;
   onAssigned: () => void;
 }
 
-const StaffAssignDispatch: React.FC<StaffAssignDialogProps> = ({ open, dispatchId, onClose, onAssigned }) => {
+const StaffAssignDispatch: React.FC<StaffAssignDialogProps> = ({
+  open,
+  dispatchId,
+  onClose,
+  onAssigned,
+}) => {
   const [staffOptions, setStaffOptions] = useState<StaffName[]>([]);
-  const [selectedStaffId, setSelectedStaffId] = useState<number | "">("");
+  const [selectedStaff, setSelectedStaff] = useState<StaffName | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
+      setLoading(true);
       getStaffNames()
         .then((res: GetStaffNamesResponse) => {
-          console.log("API response:", res);
-          if (res.status) {
-            setStaffOptions(res.data);
-            console.log("Staff options set:", res.data);
-          }
+          if (res.status) setStaffOptions(res.data);
         })
-        .catch((error) => {
-          console.error("Error fetching staff names:", error);
-        });
+        .catch((err) => console.error("Error fetching staff:", err))
+        .finally(() => setLoading(false));
     }
   }, [open]);
 
   const handleConfirm = async () => {
-    if (selectedStaffId === "") {
+    if (!selectedStaff) {
       alert("Vui lòng chọn nhân viên!");
       return;
     }
     try {
-      // Gọi hàm assignStaffDetail theo logic cũ: truyền importId và staffDetailId
-      const result = await assignDispatchStaffDetail(dispatchId, Number(selectedStaffId));
-      if (result.status) {
-        onAssigned();
-      } else {
-        console.error("Assign staff failed:", result.message);
-      }
-    } catch (error) {
-      console.error("Error assigning staff:", error);
+      const res = await assignDispatchStaffDetail(
+        dispatchId,
+        selectedStaff.id
+      );
+      if (res.status) onAssigned();
+      else console.error("Assign failed:", res.message);
+    } catch (err) {
+      console.error("Error assigning staff:", err);
     } finally {
       onClose();
-      setSelectedStaffId("");
+      setSelectedStaff(null);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Chọn nhân viên</DialogTitle>
-      <DialogContent>
-        <FormControl fullWidth>
-          <InputLabel id="staff-select-label">Nhân viên</InputLabel>
-          <Select
-            labelId="staff-select-label"
-            value={selectedStaffId}
-            label="Nhân viên"
-            onChange={(e) => setSelectedStaffId(Number(e.target.value))}
-          >
-            {staffOptions.length > 0 ? (
-              staffOptions.map((staff, index) => (
-                <MenuItem key={`${staff.id}-${index}`} value={staff.id}>
-                  {staff.fullName}
-                </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled value="">
-                Không có dữ liệu
-              </MenuItem>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          overflow: "hidden",
+        },
+      }}
+    >
+      {/* Header: đen - chữ trắng */}
+      <DialogTitle
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          px: 3,
+          py: 2,
+          backgroundColor: "#000",
+          color: "#fff",
+          fontWeight: 600,
+          fontSize: "1.25rem",
+        }}
+      >
+        {/* <Avatar
+          src={selectedStaff?.avatarUrl || "/avatar-placeholder.png"}
+          alt={selectedStaff?.fullName || "Nhân viên"}
+          sx={{ width: 40, height: 40 }}
+        /> */}
+       
+        
+        <Typography variant="h6" sx={{ m: 0 }}>
+          Chọn nhân viên
+        </Typography>
+      </DialogTitle>
+      <Divider sx={{ borderColor: '#e0e0e0' }} />
+
+      {/* Content: trắng hoặc xám nhạt */}
+      <DialogContent sx={{ pt: 4, pb: 3, px: 3, backgroundColor: "#fff" }}>
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Autocomplete
+            options={staffOptions}
+            getOptionLabel={(opt) => opt.fullName}
+            value={selectedStaff}
+            onChange={(e, val) => setSelectedStaff(val)}
+            sx={{
+              mt: 2,
+              '& .MuiAutocomplete-paper': {
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                borderRadius: 2,
+              },
+            }}
+            renderOption={(props, option) => (
+              <Box
+                component="li"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  px: 1,
+                  py: 0.5,
+                  '&:hover': { backgroundColor: '#f9f9f9' }
+                }}
+                {...props}
+              >
+                {/* <Avatar
+                  src={option.avatarUrl || "/avatar-placeholder.png"}
+                  alt={option.fullName}
+                  sx={{ width: 32, height: 32 }}
+                /> */}
+                <Avatar
+                  src={option.fullName || "/avatar-placeholder.png"}
+                  alt={option.fullName}
+                  sx={{ width: 32, height: 32 }}
+                />
+                <Typography variant="body1" sx={{ fontSize: "1rem" }}>
+                  {option.fullName}
+                </Typography>
+              </Box>
             )}
-          </Select>
-        </FormControl>
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Tìm hoặc chọn nhân viên"
+                variant="outlined"
+                size="small"
+                fullWidth
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#000',
+                  }
+                }}
+              />
+            )}
+          />
+        )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Hủy</Button>
-        <Button onClick={handleConfirm} variant="contained" color="primary">
+
+      {/* Actions: trắng - nút chính đen */}
+      <DialogActions
+        sx={{
+          px: 3,
+          py: 2,
+          backgroundColor: "#fff",
+          borderTop: "1px solid #e0e0e0",
+          justifyContent: "space-between",
+        }}
+      >
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            color: "#000",
+            borderColor: "#000",
+            px: 3,
+            '&:hover': { backgroundColor: '#f5f5f5' },
+          }}
+        >
+          Hủy
+        </Button>
+        <Button
+          onClick={handleConfirm}
+          variant="contained"
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            backgroundColor: "#000",
+            color: "#fff",
+            px: 3,
+            '&:hover': { backgroundColor: '#222' },
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          }}
+        >
           Xác nhận
         </Button>
       </DialogActions>

@@ -2,10 +2,10 @@
 import DashboardLayout from "@/layout/DasboardLayout";
 import dynamic from "next/dynamic";
 
-const OrderClient = dynamic(
+const ManagerOrderPage = dynamic(
   () =>
     import(
-      "@/components/_order/OrderClient"    ),
+      "@/components/_order/OrderManagerPage"    ),
   { ssr: false }
 );
 
@@ -13,7 +13,7 @@ const OrderClient = dynamic(
 export default function OrderPage() {
   return (
     <DashboardLayout>
-      <OrderClient />
+      <ManagerOrderPage />
     </DashboardLayout>
   );
 }

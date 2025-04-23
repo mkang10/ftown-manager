@@ -5,50 +5,48 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 interface VariantRowProps {
   index: number;
-  unitPrice: number;
+  costPrice: number;
   quantity: number;
   allocatedQuantity: number;
   productDisplay: string;
   onVariantClick: (index: number) => void;
-  onUnitPriceChange: (index: number, value: number) => void;
+  oncostPriceChange: (index: number, value: number) => void;
   onQuantityChange: (index: number, value: number) => void;
   onRemoveRow: (index: number) => void;
 }
 
 const VariantRow: React.FC<VariantRowProps> = ({
   index,
-  unitPrice,
+  costPrice,
   quantity,
   allocatedQuantity,
   productDisplay,
   onVariantClick,
-  onUnitPriceChange,
+  oncostPriceChange,
   onQuantityChange,
   onRemoveRow,
 }) => {
-  const [localUnitPrice, setLocalUnitPrice] = useState<string>(
-    unitPrice !== 0 ? unitPrice.toString() : ""
+  const [localcostPrice, setLocalcostPrice] = useState<string>(
+    costPrice !== 0 ? (costPrice / 1000).toString() : ""
   );
   const [localQuantity, setLocalQuantity] = useState<string>(
     quantity !== 0 ? quantity.toString() : ""
   );
 
   useEffect(() => {
-    setLocalUnitPrice(unitPrice !== 0 ? unitPrice.toString() : "");
-  }, [unitPrice]);
+    setLocalcostPrice(costPrice !== 0 ? (costPrice / 1000).toString() : "");
+  }, [costPrice]);
 
   useEffect(() => {
     setLocalQuantity(quantity !== 0 ? quantity.toString() : "");
   }, [quantity]);
 
-  // Kiểm tra nếu giá trị hiện tại là số âm
-  const parsedUnitPrice = parseFloat(localUnitPrice) || 0;
+  const parsedcostPrice = parseFloat(localcostPrice) || 0;
   const parsedQuantity = parseInt(localQuantity, 10) || 0;
-  const unitPriceNegativeError = localUnitPrice !== "" && parsedUnitPrice < 0;
+  const costPriceNegativeError = localcostPrice !== "" && parsedcostPrice < 0;
   const quantityNegativeError = localQuantity !== "" && parsedQuantity < 0;
 
-  // Nếu giá trị nhập vào bắt đầu bằng "0" (và không rỗng) thì "đóng băng" input
-  const freezeUnitPrice = localUnitPrice !== "" && localUnitPrice[0] === "0";
+  const freezecostPrice = localcostPrice !== "" && localcostPrice[0] === "0";
   const freezeQuantity = localQuantity !== "" && localQuantity[0] === "0";
 
   return (
@@ -59,13 +57,13 @@ const VariantRow: React.FC<VariantRowProps> = ({
         borderRadius: 1,
         position: "relative",
         mb: 2,
+        backgroundColor: "#fff",
+        color: "#000",
       }}
     >
-      <Box
-        sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-      >
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <TextField
-          label="Product Variant"
+          label="Biến thể sản phẩm"
           value={productDisplay}
           onClick={() => onVariantClick(index)}
           fullWidth
@@ -78,7 +76,7 @@ const VariantRow: React.FC<VariantRowProps> = ({
               cursor: "pointer",
             },
           }}
-          placeholder="Select Product Variant"
+          placeholder="Chọn Biến thể Sản phẩm"
         />
         {index > 0 && (
           <IconButton onClick={() => onRemoveRow(index)} sx={{ ml: 1 }} size="small">
@@ -88,30 +86,33 @@ const VariantRow: React.FC<VariantRowProps> = ({
       </Box>
       <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
         <TextField
-          label="Unit Price"
+          label="Đơn giá"
           type="number"
-          value={localUnitPrice}
+          value={localcostPrice}
           onChange={(e) => {
             const newValue = e.target.value;
-            // Nếu nhập bắt đầu bằng "0", không cập nhật state (cho phép xóa lại)
             if (newValue !== "" && newValue[0] === "0") return;
-            setLocalUnitPrice(newValue);
-            const num = newValue === "" ? 0 : parseFloat(newValue);
-            onUnitPriceChange(index, isNaN(num) ? 0 : num);
+            // Cập nhật giá trị đã nhân với 1000
+            const num = newValue === "" ? 0 : parseFloat(newValue) * 1000;
+            setLocalcostPrice(newValue);  // Cập nhật lại giá trị người dùng nhập
+            oncostPriceChange(index, isNaN(num) ? 0 : num);  // Truyền giá trị nhân với 1000
           }}
           fullWidth
           inputProps={{ min: 0 }}
-          error={unitPriceNegativeError || freezeUnitPrice}
+          error={costPriceNegativeError || freezecostPrice}
           helperText={
-            freezeUnitPrice
-              ? "Unit Price không được bắt đầu bằng số 0. Vui lòng xóa số 0."
-              : unitPriceNegativeError
-              ? "Unit Price must be non-negative"
+            freezecostPrice
+              ? "Đơn giá không được bắt đầu bằng số 0. Vui lòng xóa số 0."
+              : costPriceNegativeError
+              ? "Đơn giá phải là số dương"
               : ""
           }
+          InputProps={{
+            endAdornment: <Typography variant="body2">VND(đã tự động sử dụng đơn vị nghìn)</Typography>,
+          }}
         />
         <TextField
-          label="Quantity"
+          label="Số lượng"
           type="number"
           value={localQuantity}
           onChange={(e) => {
@@ -126,16 +127,16 @@ const VariantRow: React.FC<VariantRowProps> = ({
           error={quantityNegativeError || freezeQuantity}
           helperText={
             freezeQuantity
-              ? "Quantity không được bắt đầu bằng số 0. Vui lòng xóa số 0."
+              ? "Số lượng không được bắt đầu bằng số 0. Vui lòng xóa số 0."
               : quantityNegativeError
-              ? "Quantity must be non-negative"
+              ? "Số lượng phải là số dương"
               : ""
           }
         />
       </Box>
       <Box sx={{ mt: 1 }}>
         <Typography variant="body2" color="text.secondary">
-          Allocated Quantity: {allocatedQuantity}
+          Số lượng phân bổ: {allocatedQuantity}
         </Typography>
       </Box>
     </Box>

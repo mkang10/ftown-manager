@@ -1,19 +1,19 @@
-// app/order-staff/page.tsx
-import DashboardLayoutStaff from "@/layout/DashboardStaffLayout";
+// app/order/page.tsx
 import dynamic from "next/dynamic";
+import DashboardLayoutStaff from "@/layout/DashboardStaffLayout";
 
-const OrderStaffClient = dynamic(
+const StaffOrderPage = dynamic(
   () =>
     import(
-      "@/components/_staffcomponent/_order/OrderStaffClient"    ),
+      "@/components/_order/OrderStaffPage"    ),
   { ssr: false }
 );
 
 
-export default function OrderStaffPage() {
+export default function OrderPage() {
   return (
     <DashboardLayoutStaff>
-      <OrderStaffClient />
+      < StaffOrderPage/>
     </DashboardLayoutStaff>
   );
 }

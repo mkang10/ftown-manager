@@ -4,15 +4,15 @@ import { Box, TextField, Typography } from "@mui/material";
 
 export interface BasicInformationProps {
   selectedVariantId: number;
-  unitPrice: number;
-  onUnitPriceChange: (value: number) => void;
+  costPrice: number;
+  oncostPriceChange: (value: number) => void;
   onProductVariantChange: (variantId: number) => void;
 }
 
 const BasicInformation: React.FC<BasicInformationProps> = ({
   selectedVariantId,
-  unitPrice,
-  onUnitPriceChange,
+  costPrice,
+  oncostPriceChange,
   onProductVariantChange,
 }) => {
   return (
@@ -28,8 +28,8 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
       <TextField
         label="Unit Price"
         type="number"
-        value={unitPrice}
-        onChange={(e) => onUnitPriceChange(parseFloat(e.target.value))}
+        value={costPrice}
+        onChange={(e) => oncostPriceChange(parseFloat(e.target.value))}
         fullWidth
       />
     </Box>

@@ -1,7 +1,9 @@
-"use client"
+"use client";
 
 import React from "react";
 import { Box, Paper, Typography, Button } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import FilterListIcon from "@mui/icons-material/FilterList";
 
 interface Props {
   onOpenFilter: () => void;
@@ -9,7 +11,15 @@ interface Props {
 }
 
 const DispatchHeader: React.FC<Props> = ({ onOpenFilter, onRefresh }) => (
-  <Paper sx={{ p: 3, mb: 2 }}>
+  <Paper
+    sx={{
+      p: 3,
+      mb: 2,
+      backgroundColor: "#fff",
+      borderRadius: 2,
+      boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+    }}
+  >
     <Box
       sx={{
         display: "flex",
@@ -19,16 +29,27 @@ const DispatchHeader: React.FC<Props> = ({ onOpenFilter, onRefresh }) => (
         gap: 2,
       }}
     >
-      <Typography variant="h5" fontWeight="bold">
-        Dispatches
+      <Typography variant="h6" fontWeight="bold">
+        Danh sách phiếu điều phối xuất hàng
       </Typography>
+
       <Box sx={{ display: "flex", gap: 2 }}>
-        <Button variant="outlined" onClick={onOpenFilter}>
-          Filter
+        <Button
+          variant="contained"
+          startIcon={<FilterListIcon />}
+          onClick={onOpenFilter}
+          sx={{
+            backgroundColor: "#000",
+            color: "#fff",
+            "&:hover": {
+              backgroundColor: "#222",
+            },
+          }}
+        >
+          Bộ lọc
         </Button>
-        <Button variant="contained" onClick={onRefresh}>
-          Refresh
-        </Button>
+
+       
       </Box>
     </Box>
   </Paper>

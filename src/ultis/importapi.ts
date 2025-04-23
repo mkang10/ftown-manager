@@ -13,6 +13,7 @@ import { ImportDetailResponse } from "@/type/importdetail";
 import { InventoryImportCreateRequest, InventoryImportCreateResponse } from "@/type/createInventoryImport";
 import { FilterStaffInventoryResponse } from "@/type/importStaff";
 import { FullStockResponse, FullStockDetail } from "@/type/importStaff";
+import { ImportResponseDto } from "@/type/importdetailsm";
 
 
 
@@ -189,3 +190,12 @@ export const updateShortage = async (
   );
   return response.data;
 };
+export const getImportById = async (
+  importId: number
+): Promise<ImportResponseDto> => {
+  const response = await adminclient.get<{ data: ImportResponseDto }>(
+    `/inventoryimport/${importId}`
+  );
+  return response.data.data;
+};
+

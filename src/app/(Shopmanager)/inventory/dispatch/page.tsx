@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 const DispatchClient = dynamic(
   () =>
     import(
-    "@/components/_dispatch/DispatchClient"
+    "@/components/_dispatchAll/DispatchClient"
     ),
   { ssr: false }
 );

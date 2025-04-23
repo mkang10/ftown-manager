@@ -2,6 +2,8 @@ import { DispatchResponse } from "@/type/dispatch";
 import shopmanagerclient from "./ShopmanagerClient";
 import { DispatchStoreDetailResponse } from "@/type/dispatchStoreDetail";
 import { FullStockDetail, FullStockResponse } from "@/type/importStaff";
+import { DispatchResponseDto } from "@/type/dispatchdetail";
+import adminClient from "./adminclient";
 
 export const getDispatches = async (
   page: number,
@@ -13,6 +15,54 @@ export const getDispatches = async (
   queryParams.set("page", page.toString());
   queryParams.set("pageSize", pageSize.toString());
   queryParams.set("Status", "Approved");
+
+  // Chỉ dùng localStorage nếu ở client
+  if (typeof window !== 'undefined') {
+    try {
+      const accountString = localStorage.getItem("account");
+      if (accountString) {
+        const account = JSON.parse(accountString);
+        const storeId = account?.roleDetails?.storeId;
+        if (storeId) {
+          queryParams.set("WarehouseId", storeId.toString());
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to parse account from localStorage", error);
+    }
+  }
+
+  if (filters) {
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== "") {
+        queryParams.set(key, value.toString());
+      }
+    });
+  }
+
+  const response = await shopmanagerclient.get<{
+    data: DispatchResponse;
+    status: boolean;
+    message: string;
+  }>(`/dispatch/get-all?${queryParams.toString()}`);
+
+  if (!response.data.status) {
+    throw new Error(response.data.message || "Lỗi khi lấy danh sách dispatch");
+  }
+
+  return response.data.data;
+};
+
+
+export const getAllDispatches = async (
+  page: number,
+  pageSize: number,
+  filters?: Record<string, any>
+): Promise<DispatchResponse> => {
+  const queryParams = new URLSearchParams();
+
+  queryParams.set("page", page.toString());
+  queryParams.set("pageSize", pageSize.toString());
 
   // Chỉ dùng localStorage nếu ở client
   if (typeof window !== 'undefined') {
@@ -116,4 +166,12 @@ export const updateFullStockDispatch = async (
     }
   );
   return response.data;
+};
+export const getDispatchById = async (
+  id: number
+): Promise<DispatchResponseDto> => {
+  const response = await adminClient.get<{ data: DispatchResponseDto }>(
+    `/dispatch/dispatch/${id}`
+  );
+  return response.data.data;
 };

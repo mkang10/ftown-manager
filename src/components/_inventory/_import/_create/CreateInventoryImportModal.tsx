@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, Alert, Box } from "@mui/material";
+import { Dialog, DialogContent, Alert, Box, CircularProgress } from "@mui/material";
 import { useRouter } from "next/navigation";
 import CreateInventoryImportModalHeader from "./CreateInventoryImportModalHeader";
 import CreateInventoryImportModalForm from "./CreateInventoryImportModalForm";
@@ -24,7 +24,7 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
     importDetails: [
       {
         productVariantId: 0,
-        unitPrice: 0,
+        costPrice: 0,
         quantity: 0,
         storeDetails: [
           { 
@@ -71,10 +71,10 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
     });
   };
 
-  const handleUnitPriceChange = (rowIndex: number, value: number) => {
+  const handlecostPriceChange = (rowIndex: number, value: number) => {
     setFormData((prev) => {
       const newDetails = [...prev.importDetails];
-      newDetails[rowIndex].unitPrice = value;
+      newDetails[rowIndex].costPrice = value;
       return { ...prev, importDetails: newDetails };
     });
   };
@@ -91,12 +91,11 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
     });
   };
 
-  // Hàm submit tích hợp: trước khi tạo, kiểm tra nếu có giá trị âm thì báo lỗi và không tạo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Kiểm tra các dòng: nếu unitPrice hoặc quantity âm thì không cho tạo
+    // Kiểm tra các dòng: nếu costPrice hoặc quantity âm thì không cho tạo
     const hasNegative = formData.importDetails.some(
-      (detail) => detail.unitPrice < 0 || detail.quantity < 0
+      (detail) => detail.costPrice < 0 || detail.quantity < 0
     );
     if (hasNegative) {
       setError("Giá hoặc số lượng không được âm. Vui lòng kiểm tra lại.");
@@ -144,6 +143,11 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
           />
           <CreateInventoryImportModalActions loading={loading} onCancel={handleCancel} />
         </Box>
+        {loading && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <CircularProgress />
+          </Box>
+        )}
       </DialogContent>
     </Dialog>
   );

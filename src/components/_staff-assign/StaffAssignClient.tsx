@@ -1,9 +1,8 @@
-// app/staff-assign/StaffAssignClient.tsx
 'use client';
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, CircularProgress, Alert } from "@mui/material";
+import { Box, CircularProgress, Alert, Paper, styled } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -15,54 +14,69 @@ import StaffAssignTable from "@/components/_staff-assign/StaffAssignTable";
 import StaffAssignPagination from "@/components/_staff-assign/StaffAssignPagination";
 import StaffAssignDialog from "@/components/_staff-assign/StaffAssignDialog";
 
+// Styled components cho giao diện trắng đen mỹ thuật
+const Container = styled(Paper)(({ theme }) => ({
+  backgroundColor: '#fff',
+  color: '#000',
+  padding: theme.spacing(4),
+  margin: theme.spacing(2),
+  borderRadius: theme.shape.borderRadius * 2,
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+  border: '1px solid #000',
+}));
+
+const LoadingWrapper = styled(Box)(() => ({
+  display: 'flex',
+  justifyContent: 'center',
+  margin: '24px 0',
+}));
+
+const StyledAlert = styled(Alert)(() => ({
+  backgroundColor: '#fff',
+  color: '#000',
+  border: '1px solid #000',
+  margin: '16px 0',
+}));
+
 const StaffAssignClient: React.FC = () => {
   const router = useRouter();
+
   const [inventoryImports, setInventoryImports] = useState<InventoryImportItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+
   const [filterDialogOpen, setFilterDialogOpen] = useState<boolean>(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState<boolean>(false);
   const [selectedImportId, setSelectedImportId] = useState<number | null>(null);
+
   const [totalCount, setTotalCount] = useState<number>(0);
 
   const [filters, setFilters] = useState<FilterData>({
-    CreatedBy: "",
-    CreatedDateFrom: "",
-    CreatedDateTo: "",
+    Status: "Approved",
     ReferenceNumber: "",
-    TotalCostMin: "",
-    TotalCostMax: "",
-    ApprovedDateFrom: "",
-    ApprovedDateTo: "",
-    CompletedDateFrom: "",
-    CompletedDateTo: "",
-    PageNumber: "1",
-    PageSize: "10",
+    FromDate: "",
+    ToDate: "",
+    SortBy: "ImportId",
+    IsDescending: false,
+    Page: 1,
+    PageSize: 10,
+    HandleBy: undefined,
   });
-
-  useEffect(() => {
-    const stored = localStorage.getItem("account");
-    let initial = { ...filters, Status: "Approved" } as FilterData;
-    if (stored) {
-      const acc = JSON.parse(stored);
-      initial.CreatedBy = acc.accountId.toString();
-      initial.HandleBy = acc.roleDetails?.shopManagerId?.toString() || "";
-    }
-    setFilters(initial);
-    fetchData(initial);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const fetchData = async (applied: FilterData) => {
     setLoading(true);
     setError("");
     try {
-      const resp = await filterInventoryImports(applied);
+      const accStr = localStorage.getItem("account");
+      const acc = accStr ? JSON.parse(accStr) : {};
+      const payload = { ...applied, HandleBy: acc.roleDetails?.shopManagerId };
+
+      const resp = await filterInventoryImports(payload);
       if (resp.status) {
         setInventoryImports(resp.data.data);
         setTotalCount(resp.data.totalRecords ?? 0);
       } else {
-        setError(resp.message || "Error fetching data");
+        setError(resp.message || "Không thể tải dữ liệu.");
       }
     } catch {
       setError("Có lỗi xảy ra khi tải dữ liệu.");
@@ -71,20 +85,19 @@ const StaffAssignClient: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    fetchData(filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleApplyFilters = (applied: FilterData) => {
-    const stored = localStorage.getItem("account");
-    if (stored) {
-      const acc = JSON.parse(stored);
-      applied.CreatedBy = acc.accountId.toString();
-      applied.HandleBy = acc.roleDetails?.shopManagerId?.toString() || "";
-    }
-    applied.Status = "Approved";
-    setFilters(applied);
-    fetchData(applied);
+    const next = { ...filters, ...applied, Page: 1 };
+    setFilters(next);
+    fetchData(next);
   };
 
   const handlePageChange = (page: number) => {
-    const next = { ...filters, PageNumber: page.toString() };
+    const next = { ...filters, Page: page };
     setFilters(next);
     fetchData(next);
   };
@@ -95,28 +108,41 @@ const StaffAssignClient: React.FC = () => {
   };
 
   const handleAssigned = () => {
-    toast.success("Nhân viên đã được gán thành công!", { position: "top-right", autoClose: 3000 });
+    toast.success("Nhân viên được gán thành công!", { position: "top-right", autoClose: 3000 });
     fetchData(filters);
   };
 
-  const totalPages = Math.ceil(totalCount / Number(filters.PageSize));
-  const currentPage = Number(filters.PageNumber);
+  const totalPages = Math.ceil(totalCount / (filters.PageSize || 1));
+  const currentPage = filters.Page || 1;
 
   return (
-    <>
-      <Box sx={{ p: 4 }}>
+    <Container>
+      {/* Header với filter */}
+      <Box sx={{ mb: 2 }}>
         <StaffAssignHeader onOpenFilter={() => setFilterDialogOpen(true)} />
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Alert severity="error">{error}</Alert>
-        ) : (
-          <StaffAssignTable items={inventoryImports} onAssign={handleAssign} />
-        )}
       </Box>
 
+      {/* Nội dung chính */}
+      {loading ? (
+        <LoadingWrapper>
+          <CircularProgress size={48} sx={{ color: '#000' }} />
+        </LoadingWrapper>
+      ) : error ? (
+        <StyledAlert severity="error">{error}</StyledAlert>
+      ) : (
+        <StaffAssignTable items={inventoryImports} onAssign={handleAssign} />
+      )}
+
+      {/* phân trang */}
+      <Box sx={{ mt: 3 }}>
+        <StaffAssignPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </Box>
+
+      {/* Filter Dialog */}
       <FilterDialog
         open={filterDialogOpen}
         onClose={() => setFilterDialogOpen(false)}
@@ -125,12 +151,7 @@ const StaffAssignClient: React.FC = () => {
         showStatusFilter={false}
       />
 
-      <StaffAssignPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
-
+      {/* Assign Dialog */}
       {selectedImportId !== null && (
         <StaffAssignDialog
           open={assignDialogOpen}
@@ -140,8 +161,20 @@ const StaffAssignClient: React.FC = () => {
         />
       )}
 
-      <ToastContainer />
-    </>
+      {/* Toast thông báo */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </Container>
   );
 };
 

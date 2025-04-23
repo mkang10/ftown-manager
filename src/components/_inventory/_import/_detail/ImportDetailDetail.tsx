@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState } from "react";
 import { Box, Typography, Button, Collapse, Grid, Alert } from "@mui/material";
@@ -12,8 +11,24 @@ const CollapsibleArray: React.FC<CollapsibleArrayProps> = ({ data }) => {
   const [open, setOpen] = useState<boolean>(false);
   return (
     <Box sx={{ ml: 2 }}>
-      <Button variant="text" onClick={() => setOpen((prev) => !prev)}>
-        {open ? "Hide Items" : "Show Items"}
+      <Button
+        variant="outlined"
+        onClick={() => setOpen((prev) => !prev)}
+        sx={{
+          color: "#333",
+          borderColor: "#333",
+          "&:hover": {
+            borderColor: "#777",
+            backgroundColor: "#fafafa", // Màu nền nhạt khi hover
+          },
+          borderRadius: "50px", // Bo tròn nút đẹp hơn
+          padding: "8px 20px",
+          textTransform: "none",
+          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)", // Thêm bóng đổ nhẹ
+          transition: "all 0.3s ease",
+        }}
+      >
+        {open ? "Ẩn Các Mục" : "Hiển Thị Các Mục"}
       </Button>
       <Collapse in={open}>
         {data.map((item, index) => (
@@ -34,7 +49,7 @@ const RenderValue: React.FC<RenderValueProps> = ({ value }) => {
   if (value === null || value === undefined || value === "") return null;
 
   if (typeof value !== "object") {
-    return <Typography variant="body2">{String(value)}</Typography>;
+    return <Typography variant="body2" sx={{ color: "#333" }}>{String(value)}</Typography>;
   }
 
   // Nếu là mảng
@@ -52,7 +67,7 @@ const RenderValue: React.FC<RenderValueProps> = ({ value }) => {
     <Box sx={{ ml: 2 }}>
       {entries.map(([key, val]) => (
         <Box key={key} sx={{ mb: 1 }}>
-          <Typography variant="body2">
+          <Typography variant="body2" sx={{ color: "#333" }}>
             <strong>{key}:</strong>{" "}
             {typeof val === "object" ? <RenderValue value={val} /> : String(val)}
           </Typography>
@@ -81,51 +96,77 @@ const ImportDetailDetails: React.FC<ImportDetailDetailsProps> = ({ details, audi
       const parsed = JSON.parse(changeData);
       return <RenderValue value={parsed} />;
     } catch (error) {
-      return <Typography variant="body2">{changeData}</Typography>;
+      return <Typography variant="body2" sx={{ color: "#333" }}>{changeData}</Typography>;
     }
   };
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 3 }}>
       {/* Import Details */}
-      <Button variant="outlined" onClick={handleToggleDetails} sx={{ mb: 1 }}>
-        {openDetails ? "Hide Import Details" : "Show Import Details"}
+      <Button
+        variant="outlined"
+        onClick={handleToggleDetails}
+        sx={{
+          mb: 1,
+          color: "#333",
+          borderColor: "#333",
+          "&:hover": {
+            borderColor: "#777",
+            backgroundColor: "#fafafa", // Màu nền nhạt khi hover
+          },
+          borderRadius: "50px",
+          padding: "8px 20px",
+          textTransform: "none",
+          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)", // Thêm bóng đổ nhẹ
+          transition: "all 0.3s ease",
+        }}
+      >
+        {openDetails ? "Ẩn Chi Tiết Nhập Kho" : "Hiển Thị Chi Tiết Nhập Kho"}
       </Button>
       <Collapse in={openDetails}>
         {details.map((detail) => (
           <Box
             key={detail.importDetailId}
-            sx={{ ml: 2, mt: 1, borderBottom: "1px solid #ccc", pb: 1, mb: 1 }}
+            sx={{
+              ml: 2,
+              mt: 1,
+              borderBottom: "1px solid #ddd",
+              pb: 1,
+              mb: 1,
+              backgroundColor: "#f9f9f9", // Nền sáng nhẹ cho mỗi mục
+              borderRadius: "8px", // Bo tròn góc cho đẹp hơn
+              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)", // Thêm bóng đổ nhẹ
+              transition: "all 0.3s ease",
+            }}
           >
-            <Typography variant="body1">
-              <strong>Product Variant ID:</strong> {detail.productVariantId}
+            <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+              <strong>Mã Sản Phẩm:</strong> {detail.productVariantId}
             </Typography>
             <Typography variant="body1">
-              <strong>Quantity:</strong> {detail.quantity}
+              <strong>Số Lượng:</strong> {detail.quantity}
             </Typography>
             <Typography variant="body1">
-              <strong>Product Variant Name:</strong> {detail.productVariantName || "-"}
+              <strong>Tên Sản Phẩm:</strong> {detail.productVariantName || "-"}
             </Typography>
             <Box sx={{ ml: 2, mt: 1 }}>
-              <Typography variant="body1">
-                <strong>Store Allocations:</strong>
+              <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                <strong>Phân Bổ Kho:</strong>
               </Typography>
               {detail.storeDetails.map((store) => {
                 const missing = store.allocatedQuantity - store.actualQuantity;
                 return (
                   <Box key={store.storeId} sx={{ ml: 2, mt: 0.5 }}>
-                    <Typography variant="body2">
-                      <strong>Store ID:</strong> {store.storeId} - <strong>Name:</strong> {store.storeName} -{" "}
-                      <strong>Allocated:</strong> {store.allocatedQuantity} - <strong>Actual:</strong>{" "}
-                      {store.actualQuantity} - <strong>Staff:</strong> {store.staffName} -{" "}
-                      <strong>Status:</strong> {store.status.trim()}
+                    <Typography variant="body2" sx={{ color: "#555" }}>
+                      <strong>Kho ID:</strong> {store.storeId} - <strong>Tên Kho:</strong> {store.storeName} -{" "}
+                      <strong>Phân Bổ:</strong> {store.allocatedQuantity} - <strong>Thực Tế:</strong>{" "}
+                      {store.actualQuantity} - <strong>Nhân Viên:</strong> {store.staffName} -{" "}
+                      <strong>Trạng Thái:</strong> {store.status.trim()}
                     </Typography>
-                    {missing > 0 &&
-                      store.status.trim() === "Shortage" && (
-                        <Alert severity="error" sx={{ mt: 1 }}>
-                          Missing {missing} item{missing > 1 ? "s" : ""}
-                        </Alert>
-                      )}
+                    {missing > 0 && store.status.trim() === "Shortage" && (
+                      <Alert severity="error" sx={{ mt: 1, borderRadius: "8px" }}>
+                        Thiếu {missing} mặt hàng{missing > 1 ? "" : ""}
+                      </Alert>
+                    )}
                   </Box>
                 );
               })}
@@ -135,49 +176,77 @@ const ImportDetailDetails: React.FC<ImportDetailDetailsProps> = ({ details, audi
       </Collapse>
 
       {/* Audit Logs */}
-      <Button variant="outlined" onClick={handleToggleAudit} sx={{ mt: 2, mb: 1 }}>
-        {openAudit ? "Hide Audit Logs" : "Show Audit Logs"}
+      <Button
+        variant="outlined"
+        onClick={handleToggleAudit}
+        sx={{
+          mt: 2,
+          mb: 1,
+          color: "#333",
+          borderColor: "#333",
+          "&:hover": {
+            borderColor: "#777",
+            backgroundColor: "#fafafa", // Màu nền nhạt khi hover
+          },
+          borderRadius: "50px",
+          padding: "8px 20px",
+          textTransform: "none",
+          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+          transition: "all 0.3s ease",
+        }}
+      >
+        {openAudit ? "Ẩn Nhật Ký Kiểm Tra" : "Hiển Thị Nhật Ký Kiểm Tra"}
       </Button>
       <Collapse in={openAudit}>
         {auditLogs.map((log) => (
           <Box
             key={log.auditLogId}
-            sx={{ ml: 2, mt: 1, borderBottom: "1px solid #ccc", pb: 1, mb: 1 }}
+            sx={{
+              ml: 2,
+              mt: 1,
+              borderBottom: "1px solid #ddd",
+              pb: 1,
+              mb: 1,
+              backgroundColor: "#f9f9f9",
+              borderRadius: "8px",
+              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+              transition: "all 0.3s ease",
+            }}
           >
-            <Grid container spacing={1}>
+            <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body1">
-                  <strong>Audit Log ID:</strong> {log.auditLogId}
+                  <strong>ID Kiểm Tra:</strong> {log.auditLogId}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body1">
-                  <strong>Table:</strong> {log.tableName}
+                  <strong>Bảng:</strong> {log.tableName}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body1">
-                  <strong>Operation:</strong> {log.operation}
+                  <strong>Thao Tác:</strong> {log.operation}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body1">
-                  <strong>Changed By:</strong> {log.changedBy}
+                  <strong>Thay Đổi Bởi:</strong> {log.changedBy}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body1">
-                  <strong>Change Date:</strong> {log.changeDate}
+                  <strong>Ngày Thay Đổi:</strong> {log.changeDate}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body1">
-                  <strong>Comment:</strong> {log.comment}
+                  <strong>Bình Luận:</strong> {log.comment}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
                 <Typography variant="body1">
-                  <strong>Change Data:</strong>
+                  <strong>Dữ Liệu Thay Đổi:</strong>
                 </Typography>
                 {renderChangeData(log.changeData)}
               </Grid>

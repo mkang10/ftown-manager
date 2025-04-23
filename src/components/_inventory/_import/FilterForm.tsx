@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,21 +9,33 @@ import {
   Grid,
   TextField,
   MenuItem,
+  Box,
+  IconButton,
+  Typography,
 } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 
 // Các tùy chọn khoảng thời gian
 const timeRangeOptions = [
-  { label: "Custom", value: "" },
-  { label: "Yesterday", value: "yesterday" },
-  { label: "Last Week", value: "lastWeek" },
-  { label: "Last Month", value: "lastMonth" },
-  { label: "Last 3 Months", value: "last3Months" },
-  { label: "Last 6 Months", value: "last6Months" },
-  { label: "Last Year", value: "lastYear" },
+  { label: "Tùy chọn", value: "" },
+  { label: "Hôm qua", value: "yesterday" },
+  { label: "Tuần trước", value: "lastWeek" },
+  { label: "Tháng trước", value: "lastMonth" },
+  { label: "3 tháng trước", value: "last3Months" },
+  { label: "6 tháng trước", value: "last6Months" },
+  { label: "1 năm trước", value: "lastYear" },
 ];
 
 export interface FilterData {
-  [key: string]: any;
+  Status?: string;
+  ReferenceNumber?: string;
+  FromDate?: string;
+  ToDate?: string;
+  SortBy?: string;
+  IsDescending?: boolean;
+  Page?: number;
+  PageSize?: number;
+  HandleBy?: string;
 }
 
 interface FilterDialogProps {
@@ -31,7 +43,7 @@ interface FilterDialogProps {
   onClose: () => void;
   onSubmit: (filters: FilterData) => void;
   initialFilters?: FilterData;
-  showStatusFilter?: boolean; // Thêm prop này để điều khiển hiển thị filter Status
+  showStatusFilter?: boolean;
 }
 
 const FilterDialog: React.FC<FilterDialogProps> = ({
@@ -39,214 +51,177 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
   onClose,
   onSubmit,
   initialFilters = {},
-  showStatusFilter = true, // Mặc định hiển thị
+  showStatusFilter = true,
 }) => {
-  // Lấy HandleBy mặc định từ localStorage (nếu cần)
   const defaultHandleBy = useMemo(() => {
-    if (typeof window !== "undefined") {
-      const storedAccount = localStorage.getItem("account");
-      if (storedAccount) {
-        try {
-          const account = JSON.parse(storedAccount);
-          return account.roleDetails?.shopManagerDetailId || "";
-        } catch (error) {
-          console.error("Error parsing account:", error);
-          return "";
-        }
-      }
+    try {
+      const acc = localStorage.getItem('account');
+      return acc ? JSON.parse(acc).roleDetails?.shopManagerDetailId : '';
+    } catch {
+      return '';
     }
-    return "";
   }, []);
 
-  // Trạng thái cho các trường filter
-  const [status, setStatus] = useState(initialFilters.Status || "");
-  const [referenceNumber, setReferenceNumber] = useState(initialFilters.ReferenceNumber || "");
-  const [fromDate, setFromDate] = useState(initialFilters.FromDate || "");
-  const [toDate, setToDate] = useState(initialFilters.ToDate || "");
-  const [selectedTimeRange, setSelectedTimeRange] = useState("");
+  const [status, setStatus] = useState<string>(initialFilters.Status || '');
+  const [refNum, setRefNum] = useState<string>(initialFilters.ReferenceNumber || '');
+  const [fromDate, setFromDate] = useState<string>(initialFilters.FromDate || '');
+  const [toDate, setToDate] = useState<string>(initialFilters.ToDate || '');
+  const [range, setRange] = useState<string>('');
 
-  // Hàm định dạng date theo chuẩn datetime-local (yyyy-MM-ddTHH:mm)
-  const formatDateTimeLocal = (date: Date) => {
-    const pad = (num: number) => num.toString().padStart(2, "0");
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  useEffect(() => {
+    if (open) {
+      setStatus(initialFilters.Status || '');
+      setRefNum(initialFilters.ReferenceNumber || '');
+      setFromDate(initialFilters.FromDate || '');
+      setToDate(initialFilters.ToDate || '');
+      setRange('');
+    }
+  }, [open, initialFilters]);
+
+  const formatLocal = (d: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
-  // Cập nhật fromDate và toDate dựa trên lựa chọn dropdown
-  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.value;
-    setSelectedTimeRange(selected);
-
+  const handleRange = (value: string) => {
+    setRange(value);
     const now = new Date();
-
-    let newFromDate = "";
-    let newToDate = "";
-
-    switch (selected) {
-      case "yesterday": {
-        const yesterday = new Date(now);
-        yesterday.setDate(now.getDate() - 1);
-        newFromDate = formatDateTimeLocal(new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0));
-        newToDate = formatDateTimeLocal(new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59));
+    switch(value) {
+      case 'yesterday': {
+        const d = new Date(now);
+        d.setDate(now.getDate()-1);
+        setFromDate(formatLocal(new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,0)));
+        setToDate(formatLocal(new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59)));
         break;
       }
-      case "lastWeek": {
-        const pastWeek = new Date(now);
-        pastWeek.setDate(now.getDate() - 7);
-        newFromDate = formatDateTimeLocal(pastWeek);
-        newToDate = formatDateTimeLocal(now);
+      case 'lastWeek':
+      case 'lastMonth':
+      case 'last3Months':
+      case 'last6Months':
+      case 'lastYear': {
+        const daysMap: Record<string, number> = { lastWeek:7, lastMonth:30, last3Months:90, last6Months:180, lastYear:365 };
+        const d = new Date(now);
+        d.setDate(now.getDate() - (daysMap[value] || 0));
+        setFromDate(formatLocal(d));
+        setToDate(formatLocal(now));
         break;
       }
-      case "lastMonth": {
-        const pastMonth = new Date(now);
-        pastMonth.setDate(now.getDate() - 30);
-        newFromDate = formatDateTimeLocal(pastMonth);
-        newToDate = formatDateTimeLocal(now);
-        break;
-      }
-      case "last3Months": {
-        const past3Months = new Date(now);
-        past3Months.setDate(now.getDate() - 90);
-        newFromDate = formatDateTimeLocal(past3Months);
-        newToDate = formatDateTimeLocal(now);
-        break;
-      }
-      case "last6Months": {
-        const past6Months = new Date(now);
-        past6Months.setDate(now.getDate() - 180);
-        newFromDate = formatDateTimeLocal(past6Months);
-        newToDate = formatDateTimeLocal(now);
-        break;
-      }
-      case "lastYear": {
-        const pastYear = new Date(now);
-        pastYear.setDate(now.getDate() - 365);
-        newFromDate = formatDateTimeLocal(pastYear);
-        newToDate = formatDateTimeLocal(now);
-        break;
-      }
-      default: {
-        newFromDate = "";
-        newToDate = "";
-      }
+      default:
+        setFromDate('');
+        setToDate('');
     }
-    setFromDate(newFromDate);
-    setToDate(newToDate);
   };
 
   const handleApply = () => {
-    const filters: FilterData = {
+    const data: FilterData = {
       Status: status,
-      ReferenceNumber: referenceNumber,
+      ReferenceNumber: refNum,
       FromDate: fromDate,
       ToDate: toDate,
-      SortBy: "ImportId",
-      IsDescending: false,
-      Page: 1,
+      SortBy: initialFilters.SortBy || 'ImportId',
+      IsDescending: initialFilters.IsDescending ?? false,
+      Page: initialFilters.Page || 1,
       PageSize: initialFilters.PageSize || 10,
       HandleBy: defaultHandleBy,
     };
-
-    // Loại bỏ các trường rỗng
-    Object.keys(filters).forEach((key) => {
-      if (filters[key] === "" || filters[key] === null) {
-        delete filters[key];
-      }
-    });
-
-    onSubmit(filters);
+    Object.keys(data).forEach(k => !data[k as keyof FilterData] && delete data[k as keyof FilterData]);
+    onSubmit(data);
     onClose();
   };
 
-  const handleClear = () => {
-    setStatus("");
-    setReferenceNumber("");
-    setFromDate("");
-    setToDate("");
-    setSelectedTimeRange("");
-  };
-
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Filter Inventory Imports</DialogTitle>
-      <DialogContent>
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          {/* Chỉ render trường Status nếu showStatusFilter = true */}
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle sx={{ m: 0, p: 2, backgroundColor: '#000', color: '#fff' }}>
+        Bộ lọc phiếu nhập
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 8, top: 8, color: '#fff' }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers sx={{ backgroundColor: '#f9f9f9', pt: 3 }}>
+        <Grid container spacing={2}>
           {showStatusFilter && (
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" sx={{ mb:1, color:'#333' }}>Trạng thái</Typography>
               <TextField
                 select
-                label="Status"
                 fullWidth
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                onChange={e => setStatus(e.target.value)}
+                variant="outlined"
+                size="small"
               >
-                <MenuItem value="Pending">Pending</MenuItem>
-                <MenuItem value="Approved">Approved</MenuItem>
-                <MenuItem value="Rejected">Rejected</MenuItem>
-                <MenuItem value="Processing">Processing</MenuItem>
-                <MenuItem value="Done">Done</MenuItem>
+                {['','Pending','Approved','Rejected','Processing','Done'].map(s => (
+                  <MenuItem key={s} value={s}>{s || 'Tất cả'}</MenuItem>
+                ))}
               </TextField>
             </Grid>
           )}
-          {/* Dropdown cho Time Range */}
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" sx={{ mb:1, color:'#333' }}>Khoảng thời gian</Typography>
             <TextField
               select
-              label="Time Range"
               fullWidth
-              value={selectedTimeRange}
-              onChange={handleTimeRangeChange}
+              value={range}
+              onChange={e => handleRange(e.target.value)}
+              variant="outlined"
+              size="small"
             >
-              {timeRangeOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
+              {timeRangeOptions.map(opt => (
+                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
               ))}
             </TextField>
           </Grid>
-          {/* Trường From Date */}
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" sx={{ mb:1, color:'#333' }}>Từ ngày</Typography>
             <TextField
-              label="From Date"
-              fullWidth
               type="datetime-local"
+              fullWidth
+              variant="outlined"
+              size="small"
               InputLabelProps={{ shrink: true }}
               value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
+              onChange={e => setFromDate(e.target.value)}
             />
           </Grid>
-          {/* Trường To Date */}
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" sx={{ mb:1, color:'#333' }}>Đến ngày</Typography>
             <TextField
-              label="To Date"
-              fullWidth
               type="datetime-local"
+              fullWidth
+              variant="outlined"
+              size="small"
               InputLabelProps={{ shrink: true }}
               value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
+              onChange={e => setToDate(e.target.value)}
             />
           </Grid>
-          {/* Trường Reference Number */}
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" sx={{ mb:1, color:'#333' }}>Số tham chiếu</Typography>
             <TextField
-              label="Reference Number"
               fullWidth
-              value={referenceNumber}
-              onChange={(e) => setReferenceNumber(e.target.value)}
+              variant="outlined"
+              size="small"
+              placeholder="Nhập mã tham chiếu"
+              value={refNum}
+              onChange={e => setRefNum(e.target.value)}
             />
           </Grid>
         </Grid>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClear}>Clear</Button>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleApply} variant="contained">
-          Apply
+      <DialogActions sx={{ p:2, backgroundColor:'#fff' }}>
+        <Box sx={{ flex: 1, ml:2 }}>
+          <Button onClick={() => { setStatus(''); setRefNum(''); setFromDate(''); setToDate(''); setRange(''); }}
+            sx={{ textTransform:'none', color:'#000' }}>
+            Xóa hết
+          </Button>
+        </Box>
+        <Button onClick={onClose} sx={{ textTransform:'none', color:'#000' }}>Hủy</Button>
+        <Button onClick={handleApply} variant="contained" sx={{ textTransform:'none', backgroundColor:'#000', color:'#fff', '&:hover':{backgroundColor:'#333'} }}>
+          Áp dụng
         </Button>
       </DialogActions>
     </Dialog>

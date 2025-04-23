@@ -10,18 +10,25 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Typography,
+  Box,
 } from "@mui/material";
 import { GetStaffNamesResponse, StaffName } from "@/type/Staff";
 import { assignStaffDetail, getStaffNames } from "@/ultis/AssignAPI";
 
 interface StaffAssignDialogProps {
   open: boolean;
-  importId: number; // Dùng cho hàm assignStaffDetail như cũ
+  importId: number;
   onClose: () => void;
   onAssigned: () => void;
 }
 
-const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, onClose, onAssigned }) => {
+const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({
+  open,
+  importId,
+  onClose,
+  onAssigned,
+}) => {
   const [staffOptions, setStaffOptions] = useState<StaffName[]>([]);
   const [selectedStaffId, setSelectedStaffId] = useState<number | "">("");
 
@@ -29,33 +36,30 @@ const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, o
     if (open) {
       getStaffNames()
         .then((res: GetStaffNamesResponse) => {
-          console.log("API response:", res);
           if (res.status) {
             setStaffOptions(res.data);
-            console.log("Staff options set:", res.data);
           }
         })
         .catch((error) => {
-          console.error("Error fetching staff names:", error);
+          console.error("Lỗi khi lấy danh sách nhân viên:", error);
         });
     }
   }, [open]);
 
   const handleConfirm = async () => {
     if (selectedStaffId === "") {
-      alert("Vui lòng chọn nhân viên!");
+      alert("Vui lòng chọn nhân viên để phân công!");
       return;
     }
     try {
-      // Gọi hàm assignStaffDetail theo logic cũ: truyền importId và staffDetailId
       const result = await assignStaffDetail(importId, Number(selectedStaffId));
       if (result.status) {
         onAssigned();
       } else {
-        console.error("Assign staff failed:", result.message);
+        alert("Phân công thất bại. Vui lòng thử lại.");
       }
     } catch (error) {
-      console.error("Error assigning staff:", error);
+      console.error("Lỗi khi phân công:", error);
     } finally {
       onClose();
       setSelectedStaffId("");
@@ -63,34 +67,84 @@ const StaffAssignDialog: React.FC<StaffAssignDialogProps> = ({ open, importId, o
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Chọn nhân viên</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          backgroundColor: "#fff",
+          border: "2px solid #000",
+          borderRadius: "12px",
+          p: 2,
+        },
+      }}
+    >
+      <DialogTitle>
+        <Typography variant="h6" fontWeight="bold" color="black">
+          Phân công nhân viên
+        </Typography>
+      </DialogTitle>
       <DialogContent>
-        <FormControl fullWidth>
-          <InputLabel id="staff-select-label">Nhân viên</InputLabel>
-          <Select
-            labelId="staff-select-label"
-            value={selectedStaffId}
-            label="Nhân viên"
-            onChange={(e) => setSelectedStaffId(Number(e.target.value))}
-          >
-            {staffOptions.length > 0 ? (
-              staffOptions.map((staff, index) => (
-                <MenuItem key={`${staff.id}-${index}`} value={staff.id}>
-                  {staff.fullName}
+        <Box mt={1}>
+          <FormControl fullWidth variant="outlined">
+            <InputLabel id="staff-select-label">Chọn nhân viên</InputLabel>
+            <Select
+              labelId="staff-select-label"
+              value={selectedStaffId}
+              label="Chọn nhân viên"
+              onChange={(e) => setSelectedStaffId(Number(e.target.value))}
+              sx={{
+                backgroundColor: "#fafafa",
+                borderRadius: "8px",
+              }}
+            >
+              {staffOptions.length > 0 ? (
+                staffOptions.map((staff, index) => (
+                  <MenuItem key={`${staff.id}-${index}`} value={staff.id}>
+                    {staff.fullName}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled value="">
+                  Không có dữ liệu nhân viên
                 </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled value="">
-                Không có dữ liệu
-              </MenuItem>
-            )}
-          </Select>
-        </FormControl>
+              )}
+            </Select>
+          </FormControl>
+        </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Hủy</Button>
-        <Button onClick={handleConfirm} variant="contained" color="primary">
+      <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          sx={{
+            borderColor: "#000",
+            color: "#000",
+            fontWeight: "bold",
+            textTransform: "none",
+            "&:hover": {
+              backgroundColor: "#f2f2f2",
+              borderColor: "#000",
+            },
+          }}
+        >
+          Hủy
+        </Button>
+        <Button
+          onClick={handleConfirm}
+          variant="contained"
+          sx={{
+            backgroundColor: "#000",
+            color: "#fff",
+            fontWeight: "bold",
+            textTransform: "none",
+            "&:hover": {
+              backgroundColor: "#222",
+            },
+          }}
+        >
           Xác nhận
         </Button>
       </DialogActions>

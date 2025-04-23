@@ -14,7 +14,7 @@ import axios, { AxiosInstance } from 'axios';
 
 //localhost
 const shopmanagerclient: AxiosInstance = axios.create({
-  baseURL: 'https://ftsmserviceapi.azurewebsites.net/api/',
+  baseURL: 'https://localhost:7265/api/',
   headers: {
     'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
     Accept: '*/*',

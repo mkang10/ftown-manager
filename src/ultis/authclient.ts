@@ -1,8 +1,16 @@
 import axios, { AxiosInstance } from 'axios';
 
 // Khởi tạo axios với URL gốc của API
+// const authclient: AxiosInstance = axios.create({
+//   baseURL: 'https://ftauthservicewebapi-ahbvbvhbh0epc8c4.southeastasia-01.azurewebsites.net/api/',
+//   headers: {
+//     'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
+//     Accept: '*/*',
+//   },
+// });
+
 const authclient: AxiosInstance = axios.create({
-  baseURL: 'https://ftauthservicewebapi-ahbvbvhbh0epc8c4.southeastasia-01.azurewebsites.net/api/',
+  baseURL: 'https://localhost:7261/api/',
   headers: {
     'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
     Accept: '*/*',

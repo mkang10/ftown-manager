@@ -43,7 +43,7 @@ export interface InventoryImportFilterRequest {
     createdBy: number;
     createdByName: string;
     createdDate: string; // ISO date string
-    status: "Pending" | "Approved" | "Rejected" | "Processing" | "Done"|"Partial Success";
+    status: "Pending" | "Approved" | "Rejected" | "Processing" | "Done"|"Partial Success"|"Success";
     referenceNumber: string;
     totalCost: number;
     approvedDate: string | null;

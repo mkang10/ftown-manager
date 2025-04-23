@@ -1,4 +1,3 @@
-"use client"
 import React, { useState } from "react";
 import {
   Table,
@@ -6,13 +5,17 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Paper,
   TableContainer,
-  TableSortLabel,
-  Button,
-  Chip,
+  Paper,
   Typography,
+  Box,
+  Chip,
+  Tooltip,
+  Button,
+  useTheme,
 } from "@mui/material";
+import { TableSortLabel } from "@mui/material";
+import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { StaffInventoryImportStoreDetailDto } from "@/type/importStaff";
 import { updateFullStock, updateShortage } from "@/ultis/importapi";
@@ -30,228 +33,196 @@ interface StaffImportRequestTableProps {
   refreshData: () => void;
 }
 
-const getStatusColor = (status: string) => {
-  const normalizedStatus = status.trim();
-  switch (normalizedStatus) {
-    case "Success":
-      return "success";
-    case "Processing":
-      return "warning";
-    case "Failed":
-      return "error";
-    case "Shortage":
-      return "info";
-    default:
-      return "default";
-  }
+const statusColorMap: Record<string, string> = {
+  success: "success",
+  processing: "warning",
+  failed: "error",
+  shortage: "info",
 };
 
-const StaffImportRequestTable: React.FC<StaffImportRequestTableProps> = ({
+export default function StaffImportRequestTable({
   items,
   loading,
   onSortChange,
   sortBy,
   isDescending,
   refreshData,
-}) => {
-  // Debug log để kiểm tra dữ liệu
-  console.log("StaffImportRequestTable - loading:", loading, "items:", items);
-
-  const [openDialog, setOpenDialog] = useState<boolean>(false);
-  const [selectedItem, setSelectedItem] =
-    useState<StaffInventoryImportStoreDetailDto | null>(null);
+}: StaffImportRequestTableProps) {
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<StaffInventoryImportStoreDetailDto | null>(null);
   const [actionType, setActionType] = useState<ActionType>("FullStock");
+  const router = useRouter();
+  const theme = useTheme();
 
-  const createSortHandler = (property: string) => () => {
-    let newDesc = false;
-    if (sortBy === property) {
-      newDesc = !isDescending;
-    }
-    onSortChange(property, newDesc);
+  const startSort = (field: string) => () => {
+    const desc = sortBy === field ? !isDescending : false;
+    onSortChange(field, desc);
   };
 
-  const handleOpenDialog = (
-    item: StaffInventoryImportStoreDetailDto,
-    action: ActionType
-  ) => {
+  const openCommentDialog = (item: StaffInventoryImportStoreDetailDto, action: ActionType) => {
     setSelectedItem(item);
     setActionType(action);
     setOpenDialog(true);
   };
 
-  // Khi người dùng submit comment và actualReceivedQuantity từ dialog
-  const handleSubmitComment = async (comment: string, actualReceivedQuantity: number) => {
+  const closeDialog = () => setOpenDialog(false);
+
+  const handleCommentSubmit = async (comment: string, actualQty: number) => {
     if (!selectedItem) return;
     try {
-      const storedAccount = localStorage.getItem("account");
-      let staffId = 0;
-      if (storedAccount) {
-        const account = JSON.parse(storedAccount);
-        staffId = account.roleDetails?.staffDetailId || 0;
-      }
-  
-      const details = [
-        {
-          storeDetailId: selectedItem.importStoreId,
-          actualReceivedQuantity: actualReceivedQuantity,
-          comment: comment,
-        },
-      ];
-  
-      let result;
-      if (actionType === "FullStock") {
-        result = await updateFullStock(selectedItem.importId, staffId, details);
-      } 
-      else if (actionType === "Shortage") {
-        result = await updateShortage(selectedItem.importId, staffId, details);
-      }
-  
-      if (result?.status) {
-        toast.success(`${actionType} update: ${result.data}`);
-      } else {
-        toast.error(result?.message || "Update failed");
-      }
-      
+      const account = typeof window !== 'undefined' && localStorage.getItem('account');
+      const staffId = account ? JSON.parse(account).roleDetails?.staffDetailId || 0 : 0;
+      const details = [{ storeDetailId: selectedItem.importStoreId, actualReceivedQuantity: actualQty, comment }];
+      const result = actionType === 'FullStock'
+        ? await updateFullStock(selectedItem.importId, staffId, details)
+        : await updateShortage(selectedItem.importId, staffId, details);
+
+      result.status
+        ? toast.success(`${actionType} cập nhật thành công`)
+        : toast.error(result.message || `${actionType} thất bại`);
       refreshData();
-    } catch (error: any) {
-      console.error("API error:", error);
-  
-      // Xử lý lỗi API trả về status 400
-      if (error.response) {
-        const statusCode = error.response.status;
-        const errorMessage = error.response.data?.message || "Lỗi xảy ra!";
-  
-        if (statusCode === 400) {
-          toast.error(errorMessage);
-        } else {
-          toast.error("Lỗi từ server: " + errorMessage);
-        }
-      } else {
-        toast.error("Lỗi kết nối đến server");
-      }
+    } catch (e) {
+      toast.error('Lỗi server, vui lòng thử lại.');
     } finally {
-      setOpenDialog(false);
+      closeDialog();
     }
   };
-  
 
-  // Nếu không có dữ liệu và không loading, hiển thị EmptyState
   if (!loading && items.length === 0) {
-    return (
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <EmptyState loading={false} />
-      </TableContainer>
-    );
+    return <EmptyState loading={false} />;
   }
 
   return (
-    <>
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell align="center">
-                <TableSortLabel
-                  active={sortBy === "importStoreId"}
-                  direction={sortBy === "importStoreId" ? (isDescending ? "desc" : "asc") : "asc"}
-                  onClick={createSortHandler("importStoreId")}
+    <TableContainer
+      component={Paper}
+      sx={{
+        borderRadius: 3,
+        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+        mt: 3,
+        backgroundColor: '#fff',
+        border: '1px solid #111',  // Thêm viền đen cho bảng
+      }}
+    >
+      <Table stickyHeader>
+        <TableHead>
+          <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+            {[{ label: 'Mã nhập kho', field: 'importStoreId' }, 
+              { label: 'Kho hàng', field: 'wareHouseName' }, 
+              { label: 'Số lượng được phân bổ', field: 'allocatedQuantity' }, 
+              { label: 'Trạng thái', field: 'status' }, 
+              { label: 'Ghi chú' }, 
+              { label: 'Thao tác' }].map((col) => (
+                <TableCell 
+                  key={col.label} 
+                  align="center" 
+                  sx={{ border: '1px solid #111' }} // Thêm viền đen cho từng ô
                 >
-                  Import Store ID
-                </TableSortLabel>
-              </TableCell>
-              <TableCell align="center">
-                <TableSortLabel
-                  active={sortBy === "wareHouseName"}
-                  direction={sortBy === "wareHouseName" ? (isDescending ? "desc" : "asc") : "asc"}
-                  onClick={createSortHandler("wareHouseName")}
-                >
-                  Warehouse Name
-                </TableSortLabel>
-              </TableCell>
-              <TableCell align="center">
-                <TableSortLabel
-                  active={sortBy === "allocatedQuantity"}
-                  direction={sortBy === "allocatedQuantity" ? (isDescending ? "desc" : "asc") : "asc"}
-                  onClick={createSortHandler("allocatedQuantity")}
-                >
-                  Allocated Quantity
-                </TableSortLabel>
-              </TableCell>
-              <TableCell align="center">
-                <TableSortLabel
-                  active={sortBy === "status"}
-                  direction={sortBy === "status" ? (isDescending ? "desc" : "asc") : "asc"}
-                  onClick={createSortHandler("status")}
-                >
-                  Status
-                </TableSortLabel>
-              </TableCell>
-              <TableCell align="center">Comments</TableCell>
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.importStoreId}>
-                <TableCell align="center">{item.importStoreId}</TableCell>
-                <TableCell align="center">{item.wareHouseName}</TableCell>
-                <TableCell align="center">{item.allocatedQuantity}</TableCell>
-                <TableCell align="center">
-                  <Chip
-                    label={item.status}
-                    color={getStatusColor(item.status)}
-                    variant="outlined"
-                  />
-                </TableCell>
-                <TableCell align="center">{item.comments}</TableCell>
-                <TableCell align="center">
-                  {item.status.trim() === "Processing" ? (
-                    <>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        sx={{ mr: 1 }}
-                        onClick={() => handleOpenDialog(item, "FullStock")}
-                      >
-                        Full Stock
-                      </Button>
-                    
-                      <Button
-                        variant="contained"
-                        color="warning"
-                        size="small"
-                        onClick={() => handleOpenDialog(item, "Shortage")}
-                      >
-                        Shortage
-                      </Button>
-                    </>
-                  ) : (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        opacity: 0.5,
-                        color: "text.disabled",
-                        cursor: "default",
-                      }}
+                  {col.field ? (
+                    <TableSortLabel
+                      active={sortBy === col.field}
+                      direction={sortBy === col.field && isDescending ? 'desc' : 'asc'}
+                      onClick={startSort(col.field)}
                     >
-                      No Action
+                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#111' }}>
+                        {col.label}
+                      </Typography>
+                    </TableSortLabel>
+                  ) : (
+                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#111' }}>
+                      {col.label}
                     </Typography>
                   )}
                 </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
+              ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {items.map((item) => (
+            <TableRow
+              key={item.importStoreId}
+              hover
+              sx={{
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                '&:hover': {
+                  backgroundColor: '#fafafa',
+                },
+              }}
+              onClick={() => router.push(`/staff-import-requests/${item.importStoreId}`)}
+            >
+              <TableCell align="center" sx={{ border: '1px solid #111' }}>{item.importStoreId}</TableCell>
+              <TableCell align="center" sx={{ border: '1px solid #111' }}>{item.wareHouseName}</TableCell>
+              <TableCell align="center" sx={{ border: '1px solid #111' }}>{item.allocatedQuantity}</TableCell>
+              <TableCell align="center" sx={{ border: '1px solid #111' }}>
+                <Chip
+                  label={item.status}
+                  color={statusColorMap[item.status.trim().toLowerCase()] as any}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    fontWeight: 500,
+                    textTransform: 'capitalize',
+                    borderRadius: '12px',
+                    padding: '0 10px',
+                  }}
+                />
+              </TableCell>
+              <TableCell align="center" sx={{ border: '1px solid #111' }}>
+                <Tooltip title={item.comments || 'Không có ghi chú'}>
+                  <Typography noWrap sx={{ maxWidth: 150, color: '#333' }}>
+                    {item.comments || '-'}
+                  </Typography>
+                </Tooltip>
+              </TableCell>
+              <TableCell align="center" onClick={(e) => e.stopPropagation()} sx={{ border: '1px solid #111' }}>
+                {item.status.trim().toLowerCase() === 'processing' ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => openCommentDialog(item, 'FullStock')}
+                      sx={{
+                        backgroundColor: '#111',
+                        color: '#fff',
+                        '&:hover': {
+                          backgroundColor: '#333',
+                        },
+                      }}
+                    >
+                      Đã đủ hàng
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="warning"
+                      size="small"
+                      onClick={() => openCommentDialog(item, 'Shortage')}
+                      sx={{
+                        borderColor: '#f57c00',
+                        color: '#f57c00',
+                        '&:hover': {
+                          backgroundColor: '#fff3e0',
+                        },
+                      }}
+                    >
+                      Thiếu hàng
+                    </Button>
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Không khả dụng
+                  </Typography>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       <CommentDialog
         open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        onSubmit={handleSubmitComment}
         actionType={actionType}
+        onClose={closeDialog}
+        onSubmit={handleCommentSubmit}
       />
-    </>
+    </TableContainer>
   );
-};
-
-export default StaffImportRequestTable;
+}
