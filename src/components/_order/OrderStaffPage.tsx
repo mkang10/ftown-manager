@@ -99,7 +99,7 @@ const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
         <TableCell>{row.order?.orderTotal.toLocaleString()} VND</TableCell>
         <TableCell>{row.order?.shippingCost.toLocaleString()}</TableCell>
         <TableCell>
-          {row.order?.status === 'Confirmed' ? (
+          {row.order?.status === 'Processing' ? (
             <Button
               variant="contained"
               size="small"
