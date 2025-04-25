@@ -111,8 +111,21 @@ const ImportStoreDetailPage: React.FC = () => {
               <Typography variant="body2" fontWeight="bold">Nhân viên</Typography>
               <Typography>{detail.staff}</Typography>
             </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Typography variant="body2" fontWeight="bold">Sản phẩm</Typography>
+              <Typography>{detail.productName}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Typography variant="body2" fontWeight="bold">Màu</Typography>
+              <Typography>{detail.colorName}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Typography variant="body2" fontWeight="bold">Size</Typography>
+              <Typography>{detail.sizeName}</Typography>
+            </Grid>
+           
             <Grid item xs={12}>
-              <Typography variant="body2" fontWeight="bold">Bình luận</Typography>
+              <Typography variant="body2" fontWeight="bold">Ghi chú</Typography>
               <Typography>{detail.comments}</Typography>
             </Grid>
             <Grid item xs={12} sm={6} md={4}>

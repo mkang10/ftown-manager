@@ -1,4 +1,6 @@
 "use client"
+import { ToastContainer, toast } from 'react-toastify';
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { getAssignmentManagerOrders, completeOrder } from '@/ultis/OrderAPI';
 import {
@@ -50,11 +52,12 @@ const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
   const [open, setOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [toast, setToast] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({ open: false, message: '', severity: 'success' });
+  const [toastState, setToastState] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+  
 
   const handleDoneClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -67,17 +70,19 @@ const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
     setConfirmOpen(false);
     try {
       if (row.order?.orderId) {
+        // Giả sử completeOrder là API hoàn tất đơn hàng
         await completeOrder(row.order.orderId);
-        setToast({ open: true, message: 'Hoàn thành đơn hàng thành công!', severity: 'success' });
-        onRefresh();
+        // Hiển thị thông báo thành công
+        toast.success('Hoàn thành đơn hàng thành công!');
+        onRefresh(); // Hàm này sẽ reload lại danh sách đơn hàng
       }
     } catch (error) {
       console.error('Error completing order:', error);
-      setToast({ open: true, message: 'Lỗi khi hoàn thành đơn hàng!', severity: 'error' });
+      // Hiển thị thông báo lỗi
+      toast.error('Lỗi khi hoàn thành đơn hàng!');
     }
   };
 
-  const handleToastClose = () => setToast((prev) => ({ ...prev, open: false }));
 
   return (
     <>
@@ -180,11 +185,7 @@ const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={toast.open} autoHideDuration={3000} onClose={handleToastClose}>
-        <Alert onClose={handleToastClose} severity={toast.severity} sx={{ width: '100%' }}>
-          {toast.message}
-        </Alert>
-      </Snackbar>
+    
     </>
   );
 };
@@ -246,6 +247,8 @@ const StaffOrderPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 4 }}>
+          <ToastContainer position="top-right" autoClose={3000} />
+
       <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: '#111', fontFamily: 'Inter' }}>
         Quản lý đơn hàng
       </Typography>

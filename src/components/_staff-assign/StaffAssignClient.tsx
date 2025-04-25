@@ -1,181 +1,313 @@
-'use client';
+"use client";
+import React, { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Box,
+  Typography,
+  Paper,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  IconButton,
+  CircularProgress,
+  InputAdornment,
+  MenuItem,
+  TextField,
+  Chip,
+  Button,
+  Select,
+  Pagination,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { filterStaffInventoryImports } from '@/ultis/importassignapi';
+import { InventoryImportRecord } from '@/type/importassign';
+import StaffAssignDialog from './StaffAssignDialog';
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Box, CircularProgress, Alert, Paper, styled } from "@mui/material";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+interface InventoryImportRecordWithId extends InventoryImportRecord {
+  importId: number;
+}
 
-import { filterInventoryImports } from "@/ultis/importapi";
-import { InventoryImportItem } from "@/type/InventoryImport";
-import FilterDialog, { FilterData } from "@/components/_inventory/_import/FilterForm";
-import StaffAssignHeader from "@/components/_staff-assign/StaffAssignHeader";
-import StaffAssignTable from "@/components/_staff-assign/StaffAssignTable";
-import StaffAssignPagination from "@/components/_staff-assign/StaffAssignPagination";
-import StaffAssignDialog from "@/components/_staff-assign/StaffAssignDialog";
+const statusMap: Record<string, { label: string }> = {
+  Processing: { label: 'Đang xử lý' },
+  Success: { label: 'Hoàn tất' },
+  Pending: { label: 'Chờ xử lý' },
+  Shortage: { label: 'Thiếu hàng' },
+  Handled: { label: 'Đã xử lý' }
+};
 
-// Styled components cho giao diện trắng đen mỹ thuật
-const Container = styled(Paper)(({ theme }) => ({
-  backgroundColor: '#fff',
-  color: '#000',
-  padding: theme.spacing(4),
-  margin: theme.spacing(2),
-  borderRadius: theme.shape.borderRadius * 2,
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-  border: '1px solid #000',
+const AssignButton = styled(Button)(() => ({
+  textTransform: 'none',
+  backgroundColor: '#000',
+  color: '#fff',
+  '&:hover': { backgroundColor: '#333' }
 }));
 
-const LoadingWrapper = styled(Box)(() => ({
+const StyledPaginationContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'center',
-  margin: '24px 0',
+  alignItems: 'center',
+  padding: theme.spacing(3),
+  gap: theme.spacing(2),
+  flexDirection: 'column'
 }));
 
-const StyledAlert = styled(Alert)(() => ({
-  backgroundColor: '#fff',
-  color: '#000',
-  border: '1px solid #000',
-  margin: '16px 0',
+const StyledPaginationWrapper = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  width: '100%',
+  flexWrap: 'wrap',
+  gap: theme.spacing(2)
 }));
 
-const StaffAssignClient: React.FC = () => {
+const StaffInventoryImportAssignPage: React.FC = () => {
   const router = useRouter();
+  const [data, setData] = useState<InventoryImportRecordWithId[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentImportId, setCurrentImportId] = useState<number | null>(null);
 
-  const [inventoryImports, setInventoryImports] = useState<InventoryImportItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-
-  const [filterDialogOpen, setFilterDialogOpen] = useState<boolean>(false);
-  const [assignDialogOpen, setAssignDialogOpen] = useState<boolean>(false);
-  const [selectedImportId, setSelectedImportId] = useState<number | null>(null);
-
-  const [totalCount, setTotalCount] = useState<number>(0);
-
-  const [filters, setFilters] = useState<FilterData>({
-    Status: "Approved",
-    ReferenceNumber: "",
-    FromDate: "",
-    ToDate: "",
-    SortBy: "ImportId",
-    IsDescending: false,
-    Page: 1,
-    PageSize: 10,
-    HandleBy: undefined,
-  });
-
-  const fetchData = async (applied: FilterData) => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
-    setError("");
+    setError(null);
     try {
-      const accStr = localStorage.getItem("account");
-      const acc = accStr ? JSON.parse(accStr) : {};
-      const payload = { ...applied, HandleBy: acc.roleDetails?.shopManagerId };
-
-      const resp = await filterInventoryImports(payload);
-      if (resp.status) {
-        setInventoryImports(resp.data.data);
-        setTotalCount(resp.data.totalRecords ?? 0);
-      } else {
-        setError(resp.message || "Không thể tải dữ liệu.");
-      }
-    } catch {
-      setError("Có lỗi xảy ra khi tải dữ liệu.");
+      const resp = await filterStaffInventoryImports({
+        Page: page + 1,
+        PageSize: pageSize,
+        Status: statusFilter
+      });
+      setData(resp.data.data as InventoryImportRecordWithId[]);
+      setTotal(resp.data.totalRecords);
+    } catch (err) {
+      console.error(err);
+      setError('Không thể tải dữ liệu. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, statusFilter]);
 
   useEffect(() => {
-    fetchData(filters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchData();
+  }, [fetchData]);
 
-  const handleApplyFilters = (applied: FilterData) => {
-    const next = { ...filters, ...applied, Page: 1 };
-    setFilters(next);
-    fetchData(next);
+  const handleChangePage = (_: any, value: number) => {
+    setPage(value - 1);
   };
 
-  const handlePageChange = (page: number) => {
-    const next = { ...filters, Page: page };
-    setFilters(next);
-    fetchData(next);
+  const handleChangeRowsPerPage = (e: SelectChangeEvent<number>) => {
+    const newSize = parseInt(e.target.value as string, 10);
+    setPageSize(newSize);
+    setPage(0);
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPage(0);
+    setStatusFilter(e.target.value);
+  };
+
+  const handleRefresh = () => {
+    setStatusFilter('');
+    setPage(0);
   };
 
   const handleAssign = (importId: number) => {
-    setSelectedImportId(importId);
-    setAssignDialogOpen(true);
+    setCurrentImportId(importId);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setCurrentImportId(null);
   };
 
   const handleAssigned = () => {
-    toast.success("Nhân viên được gán thành công!", { position: "top-right", autoClose: 3000 });
-    fetchData(filters);
+    fetchData();
   };
 
-  const totalPages = Math.ceil(totalCount / (filters.PageSize || 1));
-  const currentPage = filters.Page || 1;
+  const handleRowClick = (importId: number) => {
+    router.push(`/assign/import/${importId}`);
+  };
 
   return (
-    <Container>
-      {/* Header với filter */}
-      <Box sx={{ mb: 2 }}>
-        <StaffAssignHeader onOpenFilter={() => setFilterDialogOpen(true)} />
-      </Box>
+    <Box p={4} sx={{ backgroundColor: '#fafafa', minHeight: '100vh' }}>
+      <Typography variant="h4" sx={{ color: '#212121', mb: 3, fontWeight: 600 }}>
+        Danh sách phiếu nhập kho được phân công
+      </Typography>
 
-      {/* Nội dung chính */}
-      {loading ? (
-        <LoadingWrapper>
-          <CircularProgress size={48} sx={{ color: '#000' }} />
-        </LoadingWrapper>
-      ) : error ? (
-        <StyledAlert severity="error">{error}</StyledAlert>
-      ) : (
-        <StaffAssignTable items={inventoryImports} onAssign={handleAssign} />
-      )}
+      <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
+        <Box display="flex" alignItems="center" gap={2}>
+          <TextField
+            select
+            label="Trạng thái"
+            value={statusFilter}
+            onChange={handleStatusChange}
+            size="small"
+            sx={{ minWidth: 200 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <FilterListIcon />
+                </InputAdornment>
+              )
+            }}
+          >
+            <MenuItem value="">Tất cả</MenuItem>
+            {Object.entries(statusMap).map(([key, { label }]) => (
+              <MenuItem key={key} value={key}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <IconButton onClick={handleRefresh} sx={{ color: '#757575' }}>
+            <RefreshIcon />
+          </IconButton>
+        </Box>
+      </Paper>
 
-      {/* phân trang */}
-      <Box sx={{ mt: 3 }}>
-        <StaffAssignPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
-      </Box>
+      <Paper elevation={3} sx={{ borderRadius: 3, position: 'relative' }}>
+        {loading && (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(255,255,255,0.7)'
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
+        {error ? (
+          <Box p={4}>
+            <Typography color="error">{error}</Typography>
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table sx={{ minWidth: 800, opacity: loading ? 0.5 : 1 }}>
+              <TableHead sx={{ backgroundColor: '#212121' }}>
+                <TableRow>
+                  {['Mã CT', 'Kho', 'Sản phẩm', 'Size', 'Màu', 'Thực nhận', 'Đã phân bổ', 'Trạng thái', 'Quản Lý', 'Ghi chú', 'Hành động'].map(
+                    (h) => (
+                      <TableCell key={h} sx={{ color: '#fff', fontWeight: 600, py: 1.5 }}>
+                        {h}
+                      </TableCell>
+                    )
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.map((row, idx) => {
+                  const isPending = row.status?.trim() === 'Pending';
+                  return (
+                    <TableRow
+                      key={row.importDetailId}
+                      hover
+                      onClick={() => handleRowClick(row.importId)}
+                      sx={{ cursor: 'pointer', backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9' }}
+                    >
+                      <TableCell>{row.importDetailId}</TableCell>
+                      <TableCell>{row.warehouseName}</TableCell>
+                      <TableCell>{row.productName}</TableCell>
+                      <TableCell>{row.sizeName}</TableCell>
+                      <TableCell>{row.colorName}</TableCell>
+                      <TableCell>
+                        {row.actualReceivedQuantity != null ? row.actualReceivedQuantity : '-'}
+                      </TableCell>
+                      <TableCell>{row.allocatedQuantity}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={statusMap[row.status]?.label || row.status}
+                          variant="outlined"
+                          sx={{ borderColor: '#212121', color: '#212121', fontWeight: 500, px: 1 }}
+                        />
+                      </TableCell>
+                      <TableCell>{row.handleByName}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2" noWrap title={row.comments || ''}>
+                          {row.comments?.trim() ? row.comments : '-'}
+                        </Typography>
 
-      {/* Filter Dialog */}
-      <FilterDialog
-        open={filterDialogOpen}
-        onClose={() => setFilterDialogOpen(false)}
-        onSubmit={handleApplyFilters}
-        initialFilters={filters}
-        showStatusFilter={false}
-      />
+                      </TableCell>
+                      <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                        {isPending ? (
+                          <AssignButton size="small" onClick={() => handleAssign(row.importId)}>
+                            Gán
+                          </AssignButton>
+                        ) : (
+                          <Typography variant="body2" sx={{ color: '#757575' }}>
+                            No action
+                          </Typography>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+        <StyledPaginationContainer>
+          <StyledPaginationWrapper>
+            <FormControl size="small">
+              <InputLabel id="page-size-select-label">Số dòng</InputLabel>
+              <Select
+                labelId="page-size-select-label"
+                value={pageSize}
+                onChange={handleChangeRowsPerPage}
+                label="Số dòng"
+              >
+                {[5, 10, 20, 50].map((size) => (
+                  <MenuItem key={size} value={size}>
+                    {size}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Pagination
+              count={Math.ceil(total / pageSize)}
+              page={page + 1}
+              onChange={handleChangePage}
+              color="primary"
+              shape="rounded"
+              variant="outlined"
+              showFirstButton
+              showLastButton
+            />
+          </StyledPaginationWrapper>
+        </StyledPaginationContainer>
+      </Paper>
 
-      {/* Assign Dialog */}
-      {selectedImportId !== null && (
+      {currentImportId !== null && (
         <StaffAssignDialog
-          open={assignDialogOpen}
-          importId={selectedImportId}
-          onClose={() => setAssignDialogOpen(false)}
-          onAssigned={handleAssigned}
+          open={dialogOpen}
+          importId={currentImportId}
+          onClose={handleDialogClose}
+          onAssigned={() => {
+            handleDialogClose();
+            handleAssigned();
+          }}
         />
       )}
-
-      {/* Toast thông báo */}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-    </Container>
+    </Box>
   );
 };
 
-export default StaffAssignClient;
+export default StaffInventoryImportAssignPage;

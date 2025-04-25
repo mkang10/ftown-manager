@@ -20,6 +20,9 @@ export interface AuditLog {
     warehouseName: string;
     handleBy: number | null;
     referenceNumber: string;
+    productName : string;
+    colorName : string;
+    sizeName : string;
     costPrice: number | null;
     auditLogs: AuditLog[];
   }

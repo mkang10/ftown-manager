@@ -15,6 +15,7 @@ import {
   Alert,
   Pagination,
   useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -34,7 +35,7 @@ const defaultFilters = {
   StaffDetailId: 0,
   Status: undefined,
   SortBy: "importStoreId",
-  IsDescending: false,
+  IsDescending: true,
   Page: 1,
   PageSize: 10,
 };
@@ -49,6 +50,7 @@ const ImportListRequest: React.FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
 
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const initialFilters = useMemo<StaffImportFilterDto>(() => {
     const stored =
@@ -142,7 +144,7 @@ const ImportListRequest: React.FC = () => {
           }}
         >
           <Typography
-            variant="h5"
+            variant={isMobile ? "h6" : "h5"}
             fontWeight="bold"
             sx={{ fontFamily: "'Roboto Slab', serif", color: "#000" }}
           >
@@ -171,14 +173,16 @@ const ImportListRequest: React.FC = () => {
       {!loading && staffImportRequests.length === 0 ? (
         <EmptyState loading={false} />
       ) : (
-        <StaffImportRequestTable
-          items={staffImportRequests}
-          loading={loading}
-          onSortChange={handleSortChange}
-          sortBy={filters.SortBy ?? "importStoreId"}
-          isDescending={filters.IsDescending ?? false}
-          refreshData={refreshData}
-        />
+        <Box sx={{ overflowX: "auto" }}>
+          <StaffImportRequestTable
+            items={staffImportRequests}
+            loading={loading}
+            onSortChange={handleSortChange}
+            sortBy={filters.SortBy ?? "importStoreId"}
+            isDescending={filters.IsDescending ?? false}
+            refreshData={refreshData}
+          />
+        </Box>
       )}
 
       <StaffFilterForm
@@ -190,7 +194,7 @@ const ImportListRequest: React.FC = () => {
 
       <Box
         sx={{
-          position: "fixed",
+          position: { xs: "static", md: "fixed" },
           bottom: 0,
           left: 0,
           right: 0,
@@ -201,12 +205,14 @@ const ImportListRequest: React.FC = () => {
           display: "flex",
           justifyContent: "center",
           borderTop: "1px solid #000",
+          mt: { xs: 2, md: 0 },
         }}
       >
         <Pagination
           count={totalPages}
           page={filters.Page}
           onChange={handlePageChange}
+          size={isMobile ? "small" : "medium"}
           color="primary"
         />
       </Box>

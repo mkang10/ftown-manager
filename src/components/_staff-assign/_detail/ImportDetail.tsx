@@ -93,9 +93,9 @@ const ImportDetailPage: React.FC = () => {
 
         <Paper sx={{ borderRadius: 2, boxShadow: 3, mb: 3 }}>
           <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)} centered>
-            <Tab label="Summary" />
-            <Tab label="Details" />
-            <Tab label="Audit Logs" />
+            <Tab label="Tổng Quát" />
+            <Tab label="Chi Tiết" />
+            <Tab label="Lịch sử thay đổi" />
           </Tabs>
         </Paper>
 
@@ -103,14 +103,14 @@ const ImportDetailPage: React.FC = () => {
           <Card sx={{ p: 3, mb: 4, boxShadow: 1 }}>
             <Grid container spacing={3}>
               {[
-                ['Import ID', importId],
-                ['Reference No.', referenceNumber],
-                ['Created Date', new Date(createdDate).toLocaleString()],
-                ['Status', <Chip key="status" label={status} color={status === 'Approved' ? 'success' : 'default'} size="small" />],
-                ['Total Cost', totalCost.toLocaleString()],
-                ['Created By', createdByName],
-                ['Approved Date', approvedDate || '-'],
-                ['Completed Date', completedDate || '-'],
+                ['Đơn Nhập Hàng', importId],
+                ['Mã Tham Chiếu.', referenceNumber],
+                ['Ngày Tạo', new Date(createdDate).toLocaleString()],
+                ['Trạng Thái', <Chip key="status" label={status} color={status === 'Approved' ? 'success' : 'default'} size="small" />],
+                // ['Tổng Tiền Nhập', totalCost.toLocaleString()],
+                ['Người Tạo Đơn', createdByName],
+                ['Ngày Phê Duyệt', approvedDate || '-'],
+                ['Ngày Hoàn Thành', completedDate || '-'],
               ].map(([label, val]) => (
                 <Grid item xs={12} sm={6} md={4} key={String(label)}>
                   <Typography variant="subtitle2" color="text.secondary">
@@ -131,7 +131,7 @@ const ImportDetailPage: React.FC = () => {
 
         <TabPanel value={tabIndex} index={1}>
           <Typography variant="h6" gutterBottom>
-            Import Details
+            Đơn Nhập Hàng Chi Tiết
           </Typography>
           {details.map(detail => (
             <Card key={detail.importDetailId} sx={{ mb: 3, p: 2, boxShadow: 1 }}>
@@ -141,7 +141,7 @@ const ImportDetailPage: React.FC = () => {
               <Grid container spacing={2} mb={2}>
                 <Grid item xs={12} sm={6} md={4}>
                   <Typography variant="body2" color="text.secondary">
-                    Tổng Quantity
+                    Số Lượng Tổng
                   </Typography>
                   <Typography variant="body1">{detail.quantity}</Typography>
                 </Grid>
@@ -150,12 +150,12 @@ const ImportDetailPage: React.FC = () => {
               <Table size="small">
                 <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
                   <TableRow>
-                    <TableCell>Store</TableCell>
-                    <TableCell align="right">Allocated</TableCell>
-                    <TableCell align="right">Actual</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Comments</TableCell>
-                    <TableCell>Staff</TableCell>
+                    <TableCell>Cửa Hàng</TableCell>
+                    <TableCell align="right">SL Dự kiến</TableCell>
+                    <TableCell align="right">SL Thực Tế</TableCell>
+                    <TableCell>Trạng Thái</TableCell>
+                    <TableCell>Ghi Chú</TableCell>
+                    <TableCell>Nhân Viên Xử Lí</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -179,7 +179,7 @@ const ImportDetailPage: React.FC = () => {
 
         <TabPanel value={tabIndex} index={2}>
           <Typography variant="h6" gutterBottom>
-            Audit Logs
+            Lịch Sử Đơn Nhập Hàng
           </Typography>
           {auditLogs.length === 0 ? (
             <Typography>Không có log.</Typography>

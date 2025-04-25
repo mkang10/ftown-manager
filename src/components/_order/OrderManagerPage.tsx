@@ -1,4 +1,7 @@
 "use client"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { getAssignmentManagerOrders } from '@/ultis/OrderAPI';
 import {
@@ -191,7 +194,11 @@ const ManagerOrderPage: React.FC = () => {
     setAssignmentDateFrom(fromDate.toISOString().split('T')[0]);
     setAssignmentDateTo(toDate.toISOString().split('T')[0]);
   };
-
+  const handleAssigned = () => {
+    toast.success('Đã gán nhân viên xử lí đơn thành công');
+    fetchData();
+  };
+  
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -218,6 +225,7 @@ const ManagerOrderPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 4 }}>
+       <ToastContainer position="top-right" autoClose={3000} />
       <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: '#111', fontFamily: 'Inter' }}>
         Quản lý đơn hàng
       </Typography>
@@ -325,7 +333,7 @@ const ManagerOrderPage: React.FC = () => {
                 </TableHead>
                 <TableBody>
                   {rows.map((row) => (
-                    <OrderRow key={row.assignmentId} row={row} onAssigned={fetchData} />
+                    <OrderRow key={row.assignmentId} row={row} onAssigned={handleAssigned} />
                   ))}
                 </TableBody>
               </Table>

@@ -73,20 +73,31 @@ export default function StaffImportRequestTable({
       const account = typeof window !== 'undefined' && localStorage.getItem('account');
       const staffId = account ? JSON.parse(account).roleDetails?.staffDetailId || 0 : 0;
       const details = [{ storeDetailId: selectedItem.importStoreId, actualReceivedQuantity: actualQty, comment }];
+  
       const result = actionType === 'FullStock'
         ? await updateFullStock(selectedItem.importId, staffId, details)
         : await updateShortage(selectedItem.importId, staffId, details);
-
+  
       result.status
         ? toast.success(`${actionType} cập nhật thành công`)
         : toast.error(result.message || `${actionType} thất bại`);
+      
       refreshData();
-    } catch (e) {
-      toast.error('Lỗi server, vui lòng thử lại.');
+    } catch (error: any) {
+      // Kiểm tra lỗi từ server (nếu có response trả về từ Axios)
+      if (error.response && error.response.data) {
+        const serverMessage = error.response.data.message || JSON.stringify(error.response.data);
+        toast.error(`Lỗi từ server: ${serverMessage}`);
+      } else if (error.message) {
+        toast.error(`Lỗi: ${error.message}`);
+      } else {
+        toast.error('Đã xảy ra lỗi không xác định. Vui lòng thử lại.');
+      }
     } finally {
       closeDialog();
     }
   };
+  
 
   if (!loading && items.length === 0) {
     return <EmptyState loading={false} />;
@@ -106,53 +117,67 @@ export default function StaffImportRequestTable({
       <Table stickyHeader>
         <TableHead>
           <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-            {[{ label: 'Mã nhập kho', field: 'importStoreId' }, 
-              { label: 'Kho hàng', field: 'wareHouseName' }, 
-              { label: 'Số lượng được phân bổ', field: 'allocatedQuantity' }, 
-              { label: 'Trạng thái', field: 'status' }, 
-              { label: 'Ghi chú' }, 
-              { label: 'Thao tác' }].map((col) => (
-                <TableCell 
-                  key={col.label} 
-                  align="center" 
-                  sx={{ border: '1px solid #111' }} // Thêm viền đen cho từng ô
-                >
-                  {col.field ? (
-                    <TableSortLabel
-                      active={sortBy === col.field}
-                      direction={sortBy === col.field && isDescending ? 'desc' : 'asc'}
-                      onClick={startSort(col.field)}
-                    >
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#111' }}>
-                        {col.label}
-                      </Typography>
-                    </TableSortLabel>
-                  ) : (
+            {[{ label: 'Mã nhập kho', field: 'importStoreId' },
+                      
+
+          
+            { label: 'Sản phẩm', field: 'productName' },
+            { label: 'Số lượng', field: 'sizeName' },
+            { label: 'Màu sắc', field: 'colorName' },
+              { label: 'Số lượng được phân bổ', field: 'allocatedQuantity' },
+            { label: 'Số lượng được thực tế', field: 'actualReceivedQuantity' },
+            { label: 'Trạng thái', field: 'status' },
+            { label: 'Ghi chú' },
+            { label: 'Thao tác' }].map((col) => (
+              <TableCell
+                key={col.label}
+                align="center"
+                sx={{ border: '1px solid #111' }} // Thêm viền đen cho từng ô
+              >
+                {col.field ? (
+                  <TableSortLabel
+                    active={sortBy === col.field}
+                    direction={sortBy === col.field && isDescending ? 'desc' : 'asc'}
+                    onClick={startSort(col.field)}
+                  >
                     <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#111' }}>
                       {col.label}
                     </Typography>
-                  )}
-                </TableCell>
-              ))}
+                  </TableSortLabel>
+                ) : (
+                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#111' }}>
+                    {col.label}
+                  </Typography>
+                )}
+              </TableCell>
+            ))}
           </TableRow>
         </TableHead>
         <TableBody>
-          {items.map((item) => (
-            <TableRow
-              key={item.importStoreId}
-              hover
-              sx={{
-                cursor: 'pointer',
-                transition: 'background-color 0.2s',
-                '&:hover': {
-                  backgroundColor: '#fafafa',
-                },
-              }}
-              onClick={() => router.push(`/staff-import-requests/${item.importStoreId}`)}
-            >
+        {items.slice().map((item) => (
+      <TableRow
+        key={item.importStoreId}
+        hover
+        sx={{
+          cursor: 'pointer',
+          transition: 'background-color 0.2s',
+          '&:hover': {
+            backgroundColor: '#fafafa',
+          },
+        }}
+        onClick={() => router.push(`/staff-import-requests/${item.importStoreId}`)}
+      >
               <TableCell align="center" sx={{ border: '1px solid #111' }}>{item.importStoreId}</TableCell>
-              <TableCell align="center" sx={{ border: '1px solid #111' }}>{item.wareHouseName}</TableCell>
+
+
+              <TableCell align="center" sx={{ border: '1px solid #111' }}>{item.productName}</TableCell>
+              <TableCell align="center" sx={{ border: '1px solid #111' }}>{item.sizeName}</TableCell>
+              <TableCell align="center" sx={{ border: '1px solid #111' }}>{item.colorName}</TableCell>
               <TableCell align="center" sx={{ border: '1px solid #111' }}>{item.allocatedQuantity}</TableCell>
+
+              <TableCell align="center" sx={{ border: '1px solid #111' }}>
+   {item.actualReceivedQuantity != null ? item.actualReceivedQuantity : '-'}
+</TableCell>
               <TableCell align="center" sx={{ border: '1px solid #111' }}>
                 <Chip
                   label={item.status}

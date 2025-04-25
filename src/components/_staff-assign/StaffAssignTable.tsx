@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, TableHead, TableRow, TableCell, TableBody, Paper, styled, Button, Box } from '@mui/material';
+import { Table, TableHead, TableRow, TableCell, TableBody, Paper, styled, Button, Box ,Typography} from '@mui/material';
 import { InventoryImportItem } from '@/type/InventoryImport';
 
 // Mapping trạng thái sang màu và nhãn tiếng Việt
@@ -77,7 +77,7 @@ const StaffAssignTable: React.FC<StaffAssignTableProps> = ({ items, onAssign }) 
               <HeaderCell>Ngày tạo</HeaderCell>
               <HeaderCell>Trạng thái</HeaderCell>
               <HeaderCell>Số tham chiếu</HeaderCell>
-              <HeaderCell align="right">Tổng chi phí</HeaderCell>
+              {/* <HeaderCell align="right">Tổng chi phí</HeaderCell> */}
               <HeaderCell>Ngày duyệt</HeaderCell>
               <HeaderCell>Ngày hoàn thành</HeaderCell>
               <HeaderCell align="center">Thao tác</HeaderCell>
@@ -94,7 +94,7 @@ const StaffAssignTable: React.FC<StaffAssignTableProps> = ({ items, onAssign }) 
                   {STATUS_LABEL[item.status] || item.status}
                 </TableCell>
                 <TableCell>{item.referenceNumber}</TableCell>
-                <TableCell align="right">{item.totalCost.toLocaleString('vi-VN')} VND</TableCell>
+                {/* <TableCell align="right">{item.totalCost.toLocaleString('vi-VN')} VND</TableCell> */}
                 <TableCell>
                   {item.approvedDate
                     ? new Date(item.approvedDate).toLocaleDateString()
@@ -106,9 +106,24 @@ const StaffAssignTable: React.FC<StaffAssignTableProps> = ({ items, onAssign }) 
                     : '-'}
                 </TableCell>
                 <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                  <AssignButton variant="contained" size="small" onClick={() => onAssign(item.importId)}>
-                    Gán
-                  </AssignButton>
+                {(item.status === 'Partial Success' || item.status === 'Approved') ? (
+  <AssignButton 
+    variant="contained" 
+    size="small" 
+    onClick={() => onAssign(item.importId)}
+  >
+    Gán
+  </AssignButton>
+) : (
+  <Typography 
+    variant="body2" 
+    component="span" 
+    sx={{ color: 'text.disabled', fontStyle: 'italic' }}
+  >
+    No action
+  </Typography>
+)}
+
                 </TableCell>
               </BodyRow>
             ))}

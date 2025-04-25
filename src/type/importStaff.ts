@@ -10,6 +10,10 @@ export interface StaffInventoryImportStoreDetailDto {
   staffDetailId?: number;
   wareHouseName: string;
   staffName?: string;
+  productName : string;
+  sizeName : string;
+  colorName : string;
+  actualReceivedQuantity? : number;
 }
 
 export interface StaffImportFilterDto {

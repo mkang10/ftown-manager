@@ -95,7 +95,7 @@ const InventoryImportTable: React.FC<InventoryImportTableProps> = ({
                 <TableCell align="center" sx={{ fontWeight: 700 }}>
                   Trạng thái
                 </TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700 }}>
+                {/* <TableCell align="center" sx={{ fontWeight: 700 }}>
                   <TableSortLabel
                     active={sortBy === 'TotalCost'}
                     direction={sortBy === 'TotalCost' && isDescending ? 'desc' : 'asc'}
@@ -103,7 +103,7 @@ const InventoryImportTable: React.FC<InventoryImportTableProps> = ({
                   >
                     Tổng chi phí
                   </TableSortLabel>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -158,11 +158,11 @@ const InventoryImportTable: React.FC<InventoryImportTableProps> = ({
                       </Box>
                     </Tooltip>
                   </TableCell>
-                  <TableCell align="center">
+                  {/* <TableCell align="center">
                     <Typography variant="body2" color="textPrimary">
                       {item.totalCost.toLocaleString('vi-VN')} VND
                     </Typography>
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               ))}
             </TableBody>

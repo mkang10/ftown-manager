@@ -54,6 +54,9 @@ const DispatchStoreExportDetailPage: React.FC = () => {
           warehouseName: item.warehouseName,
           allocatedQuantity: item.allocatedQuantity,
           status: item.status,
+          colorName : item.colorName,
+          sizeName: item.sizeName,
+          productName: item.productName,
           comments: item.comments ?? "",
           staff: item.staff ?? null,
           dispatchDetailId: item.dispatchDetailId,
@@ -152,11 +155,15 @@ const DispatchStoreExportDetailPage: React.FC = () => {
           <Grid container spacing={2}>
             {[
               { label: 'Kho', content: detail.warehouseName },
-              { label: 'Trạng thái', content: <Chip label={detail.status} color={statusColor(detail.status)} size="small" /> },
-              { label: 'Người xử lý', content: detail.handleBy },
+              { label: 'Người gán', content: detail.handleBy },
               { label: 'Nhân viên', content: detail.staff || '-' },
+              { label: 'Sản phẩm', content: detail.productName || '-' },
+              { label: 'Kích thước', content: detail.sizeName || '-' },
+              { label: 'Màu sắc', content: detail.colorName || '-' },
               { label: 'Đã phân bổ', content: detail.allocatedQuantity },
               { label: 'Thực xuất', content: detail.actualQuantity ?? '-' },
+              { label: 'Trạng thái', content: <Chip label={detail.status} color={statusColor(detail.status)} size="small" /> },
+
             ].map((item, idx) => (
               <Grid key={idx} item xs={12} sm={6} md={4}>
                 <Typography variant="body2" fontWeight={600} gutterBottom>

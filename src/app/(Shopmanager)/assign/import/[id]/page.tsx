@@ -1,14 +1,13 @@
 // app/staff-assign/page.tsx
-import ImportDetailPage from "@/components/_staff-assign/_detail/ImportDetail";
 import DashboardLayout from "@/layout/DasboardLayout";
 
 import dynamic from "next/dynamic";
 
 
-const StaffAssignClient = dynamic(
+const ImportDetailPage = dynamic(
   () =>
     import(
-      "@/components/_staff-assign/StaffAssignClient"
+     "@/components/_staff-assign/_detail/ImportDetail"
     ),
   { ssr: false }
 );

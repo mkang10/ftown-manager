@@ -31,7 +31,7 @@ const InventoryImportListClient: React.FC = () => {
     FromDate: "",
     ToDate: "",
     SortBy: "ImportId",
-    IsDescending: false,
+    IsDescending: true,
     Page: 1,
     PageSize: 10,
   });

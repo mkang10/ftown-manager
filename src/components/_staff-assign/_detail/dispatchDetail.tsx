@@ -95,7 +95,7 @@ const DispatchDetailPage: React.FC = () => {
   return (
     <Box sx={{ p: 4, backgroundColor: "#fafafa", minHeight: "100vh", color: "#212121" }}>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Chi tiết Dispatch #{dispatchId}
+        Chi Tiết Phiếu Xuất #{dispatchId}
       </Typography>
       <Divider sx={{ mb: 3, borderColor: "#e0e0e0" }} />
 
@@ -117,7 +117,7 @@ const DispatchDetailPage: React.FC = () => {
         >
           <Tab label="Chi tiết" />
           <Tab label="Sản phẩm" />
-          <Tab label="Audit Logs" />
+          <Tab label="Lịch sử đơn xuất" />
         </Tabs>
       </Paper>
 
@@ -134,14 +134,13 @@ const DispatchDetailPage: React.FC = () => {
         >
           <Grid container spacing={2}>
             {[
-              ["Dispatch ID", dispatchId],
-              ["User", createdByUser],
-              ["Created Date", new Date(createdDate).toLocaleString()],
-              ["Status", status],
-              ["Reference No.", referenceNumber],
-              ["Remarks", remarks || "-"],
-              ["Original ID", originalId ?? "-"],
-              ["Completed Date", completedDate ?? "-"],
+              ["Người Tạo Đơn", createdByUser],
+              ["Ngày Tạo Đơn", new Date(createdDate).toLocaleString()],
+              ["Trạng Thái", status],
+              ["Mã Xuất Hàng.", referenceNumber],
+              ["Đánh Dấu", remarks || "-"],
+              ["Mã Gốc", originalId ?? "-"],
+              ["Ngày Hoàn Thành", completedDate ?? "-"],
             ].map(([label, val]) => (
               <Grid item xs={12} sm={6} md={4} key={label.toString()}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
@@ -210,24 +209,25 @@ const DispatchDetailPage: React.FC = () => {
           <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
             <TableRow>
               {[
-                "ID Detail",
-                "Variant",
-                "Quantity",
-                "Price",
+                "Mã chi tiết",
+                "Biến thể",
+                "Số lượng",
+                "Đơn giá",
                 "Kho xuất",
-                "Allocated",
-                "Status",
+                "Đã phân bổ",
+                "Trạng thái",
               ].map((header) => (
                 <TableCell
                   key={header}
                   sx={{ fontWeight: 600, color: "#212121" }}
-                  align={["Quantity", "Price", "Allocated"].includes(header) ? "right" : "left"}
+                  align={["Số lượng", "Đơn giá", "Đã phân bổ"].includes(header) ? "right" : "left"}
                 >
                   {header}
                 </TableCell>
               ))}
             </TableRow>
           </TableHead>
+
           <TableBody>
             {details.map((d: DispatchDetail) => (
               <TableRow
@@ -240,7 +240,7 @@ const DispatchDetailPage: React.FC = () => {
                 <TableCell>{d.dispatchDetailId}</TableCell>
                 <TableCell>{d.variantName}</TableCell>
                 <TableCell align="right">{d.quantity}</TableCell>
-                <TableCell align="right">{d.priceProductVariant}</TableCell>
+                <TableCell align="right">0 VND</TableCell>
                 <TableCell>{d.storeExportDetail[0]?.warehouseName}</TableCell>
                 <TableCell align="right">{d.storeExportDetail[0]?.allocatedQuantity}</TableCell>
                 <TableCell>
@@ -298,7 +298,7 @@ const DispatchDetailPage: React.FC = () => {
 
       <TabPanel value={tabIndex} index={2}>
         <Typography variant="h6" gutterBottom>
-          Audit Logs
+          Lịch Sử Xuất Hàng
         </Typography>
         {auditLogs.length === 0 ? (
           <Typography color="text.secondary">Không có log.</Typography>

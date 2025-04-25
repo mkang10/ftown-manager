@@ -21,6 +21,9 @@ export interface AuditLog {
     actualQuantity: number | null;
     referenceNumber: string;
     auditLogs: AuditLog[];
+    colorName : string;
+    sizeName : string;
+    productName : string;
   }
   
   export interface DispatchStoreDetailResponse {

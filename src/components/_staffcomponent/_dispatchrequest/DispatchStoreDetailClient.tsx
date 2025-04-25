@@ -1,305 +1,353 @@
-"use client";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+"use client"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useRouter } from 'next/navigation';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
-  IconButton,
-  CircularProgress,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
   Paper,
-  Tooltip,
-  Divider,
-  Stack,
-  Card,
-  CardContent,
-  Button,
-} from "@mui/material";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import Inventory2Icon from "@mui/icons-material/Inventory2";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+  CircularProgress,
+  TableSortLabel,
+  IconButton,
+  Select,
+  MenuItem,
+  Pagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { DispatchStoreDetail } from '@/type/dispatchnew';
+import { getDispatchByStaff } from '@/ultis/dispatchapinew';
+import { FullStockDetail } from '@/type/importStaff';
+import { updateFullStockDispatch } from '@/ultis/dispatch';
 
-import {
-  DispatchStoreDetail,
-  DispatchStoreDetailResponse,
-} from "@/type/dispatchStoreDetail";
-import DispatchStoreDetailTable from "@/components/_staffcomponent/_dispatchrequest/DispatchStoreDetailTable";
-import DispatchStoreDetailPagination from "@/components/_staffcomponent/_dispatchrequest/DispatchStoreDetailPagination";
-import DispatchStoreDetailFilterDialog, {
-  FilterData,
-} from "@/components/_staffcomponent/_dispatchrequest/DispatchStoreDetailFilterDialog";
-import {
-  filterDispatchStoreDetails,
-  updateFullStockDispatch,
-} from "@/ultis/dispatch";
-import CommentDialog from "@/components/_staffcomponent/_importreuquest/CommentDialog";
-
-const theme = createTheme({
-  palette: {
-    mode: "light",
-    background: { default: "#f9f9f9", paper: "#ffffff" },
-    text: { primary: "#000000", secondary: "#444444" },
-    primary: { main: "#000000" },
-    contrastThreshold: 4.5,
-    tonalOffset: 0.2,
-  },
-  typography: {
-    fontFamily: '"Inter", sans-serif',
-    h5: { fontWeight: 700, letterSpacing: 0.5, color: "#000000" },
-    body1: { fontSize: "1rem", color: "#111111" },
-  },
-  components: {
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 0,
-          border: "1px solid #000000",
-          boxShadow: "none",
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 0,
-          border: "0px solid #000000",
-          boxShadow: "none",
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          textTransform: "none",
-          fontWeight: 600,
-        },
-        containedPrimary: {
-          backgroundColor: "#000000",
-          color: "#ffffff",
-          transition: "all 0.3s ease",
-          '&:hover': {
-            backgroundColor: "#ffffff",
-            color: "#000000",
-            border: "2px solid #000000",
-          },
-        },
-        outlinedPrimary: {
-          borderColor: "#000000",
-          color: "#000000",
-          '&:hover': {
-            backgroundColor: "rgba(0,0,0,0.04)",
-          },
-        },
-      },
-    },
-    MuiIconButton: {
-      styleOverrides: {
-        root: {
-          color: "#000000",
-        },
-      },
-    },
-    MuiDivider: {
-      styleOverrides: {
-        root: {
-          margin: "0.5rem 0",
-          backgroundColor: "#000000",
-          height: 2,
-        },
-      },
-    },
-  },
+// Styled components (Trắng-đen tinh tế)
+const Container = styled(Box)({
+  backgroundColor: '#fff',
+  color: '#000',
+  padding: '32px',
+  minHeight: '100vh'
+});
+const CardPaper = styled(Paper)({
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  overflow: 'hidden',
+  marginBottom: 24
+});
+const Header = styled(Box)({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '24px'
+});
+const FilterBox = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '16px',
+  padding: '16px'
+});
+const StyledSelect = styled(Select)({
+  '& .MuiSelect-select': {
+    padding: '8px',
+    borderRadius: 8,
+    border: '1px solid #000',
+    fontSize: '0.95rem'
+  }
 });
 
-//... rest of the code remains unchanged
-const DispatchStoreDetailClient: React.FC = () => {
-  const staffDetailId = useMemo(() => {
-    if (typeof window === "undefined") return "";
-    try {
-      const acct = JSON.parse(localStorage.getItem("account") || "{}");
-      return acct.roleDetails?.staffDetailId?.toString() || "";
-    } catch {
-      return "";
+const ConfirmDialogTitle = styled(DialogTitle)({
+  backgroundColor: '#000',
+  color: '#fff',
+  fontWeight: 'bold'
+});
+const ConfirmDialogContent = styled(DialogContent)({
+  backgroundColor: '#fafafa',
+  paddingTop: 24,
+  paddingBottom: 24
+});
+const ConfirmDialogActions = styled(DialogActions)({
+  padding: '16px 24px',
+  backgroundColor: '#f0f0f0'
+});
+const CancelButton = styled(Button)({
+  border: '1px solid #000',
+  color: '#000',
+  backgroundColor: '#fff',
+  '&:hover': {
+    backgroundColor: '#e0e0e0'
+  }
+});
+const ConfirmButton = styled(Button)({
+  backgroundColor: '#000',
+  color: '#fff',
+  '&:hover': {
+    backgroundColor: '#333'
+  }
+});
+
+const StaffDispatchPage: React.FC = () => {
+  const [data, setData] = useState<DispatchStoreDetail[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('dispatchStoreDetailId');
+  const [isDescending, setIsDescending] = useState<boolean>(true);
+  const [loading, setLoading] = useState(false);
+  const [staffId, setStaffId] = useState<number>(0);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<DispatchStoreDetail | null>(null);
+
+  // Lấy staffId từ localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('account');
+    if (stored) {
+      const account = JSON.parse(stored);
+      setStaffId(account.roleDetails?.staffDetailId || 0);
     }
   }, []);
 
-  const [data, setData] = useState<DispatchStoreDetail[]>([]);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [filters, setFilters] = useState<FilterData>({
-    DispatchDetailId: "",
-    WarehouseId: "",
-    StaffDetailId: staffDetailId,
-    HandleBy: "",
-    Status: "",
-    Comments: "",
-    SortBy: "",
-    IsDescending: false,
-    Page: "1",
-    PageSize: "10",
-  });
-  const [sortField, setSortField] = useState("dispatchStoreDetailId");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
-  const [actionType, setActionType] = useState<"FullStock" | "Shortage">("FullStock");
-  const [selectedItem, setSelectedItem] = useState<DispatchStoreDetail | null>(null);
-
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (showLoading: boolean = true) => {
+    if (!staffId) return;
+    if (showLoading) setLoading(true);
     try {
-      const applied = {
-        ...filters,
-        SortBy: sortField,
-        IsDescending: sortDirection === "desc",
-        StaffDetailId: staffDetailId,
-        Page: page.toString(),
-        PageSize: pageSize.toString(),
+      const params = {
+        StaffDetailId: staffId,
+        Status: statusFilter || undefined,
+        SortBy: sortBy,
+        IsDescending: isDescending,
+        Page: page + 1,
+        PageSize: pageSize
       };
-      const res: DispatchStoreDetailResponse = await filterDispatchStoreDetails(
-        page,
-        pageSize,
-        applied
-      );
-      setData(res.data || []);
-      setTotalRecords(res.totalRecords || 0);
-    } catch {
-      toast.error("Không tải được dữ liệu.");
+      const resp = await getDispatchByStaff(params);
+      setData(resp.data.data);
+      setTotalRecords(resp.data.totalRecords);
+    } catch (err) {
+      console.error('Lỗi khi lấy dữ liệu:', err);
+    } finally {
+      if (showLoading) setLoading(false);
     }
-  }, [filters, page, pageSize, sortField, sortDirection, staffDetailId]);
+  }, [staffId, statusFilter, sortBy, isDescending, page, pageSize]);
 
+
+  // Fetch data
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const handlePageChange = (_: any, newPage: number) => setPage(newPage);
-  const handleFilterSubmit = (applied: FilterData) => {
-    setFilters({
-      ...applied,
-      StaffDetailId: staffDetailId,
-      Page: "1",
-      PageSize: pageSize.toString(),
-    });
-    setPage(1);
-    setFilterDialogOpen(false);
+  const handleSort = (field: string) => {
+    const desc = sortBy === field ? !isDescending : true;
+    setSortBy(field);
+    setIsDescending(desc);
+    setPage(0);
   };
-  const handleSortChange = (field: string) => {
-    const dir = sortField === field && sortDirection === "asc" ? "desc" : "asc";
-    setSortField(field);
-    setSortDirection(dir);
-    setPage(1);
+
+  const handleDoneClick = (row: DispatchStoreDetail) => {
+    setSelectedRow(row);
+    setOpenDialog(true);
   };
-  const handleDone = (id: number, type: "FullStock" | "Shortage") => {
-    const it = data.find((d) => d.dispatchStoreDetailId === id);
-    if (!it) return toast.error("Không tìm thấy mục.");
-    setSelectedItem(it);
-    setActionType(type);
-    setIsCommentDialogOpen(true);
-  };
-  const handleSubmitComment = async (comment: string, actualQty: number) => {
-    if (!selectedItem) return;
+  const router = useRouter();
+
+  const handleConfirmDone = async () => {
+    if (!selectedRow) return;
+    const details: FullStockDetail[] = [{
+      storeDetailId: selectedRow.dispatchStoreDetailId,
+      actualReceivedQuantity: selectedRow.allocatedQuantity,
+      comment: selectedRow.comments
+    }];
     try {
-      const result = await updateFullStockDispatch(
-        selectedItem.dispatchId!,
-        +staffDetailId,
-        [
-          {
-            storeDetailId: selectedItem.dispatchStoreDetailId,
-            actualReceivedQuantity:
-              actionType === "FullStock"
-                ? selectedItem.allocatedQuantity
-                : actualQty,
-            comment,
-          },
-        ]
-      );
-      result?.status
-        ? toast.success("Cập nhật thành công")
-        : toast.error(result?.message || "Thất bại");
-      fetchData();
-    } catch {
-      toast.error("Lỗi server.");
+      await updateFullStockDispatch(selectedRow.dispatchId, staffId, details);
+      toast.success('Cập nhật xuất hàng thành công!');
+      setOpenDialog(false);
+      fetchData(false); // reload nhẹ không trigger loading spinner
+    } catch (err) {
+      console.error('Lỗi khi cập nhật:', err);
+      toast.error('Có lỗi xảy ra khi cập nhật!');
     }
-    setIsCommentDialogOpen(false);
-    setSelectedItem(null);
   };
 
   const totalPages = Math.ceil(totalRecords / pageSize);
 
   return (
-    <ThemeProvider theme={theme}>
-      <Paper sx={{ mb: 5 }}>
-        <Box sx={{ display: "flex", alignItems: "center", px: 3, py: 2, borderBottom: "1px solid #ddd" }}>
-          <Inventory2Icon fontSize="medium" sx={{ mr: 1 }} />
-          <Typography variant="h5">Chi tiết Xuất Kho</Typography>
-        </Box>
+    <Container>
+      <ToastContainer position="top-right" autoClose={3000} />
 
-        <Box
+      <Header>
+        <Typography
+          variant="h4"
           sx={{
-            px: 3,
-            py: 2,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            backgroundColor: "#f5f5f5",
+            fontWeight: 'bold',
+            color: '#000',
+            borderLeft: '4px solid #000',
+            paddingLeft: 2,
+            textTransform: 'uppercase',
+            letterSpacing: 1,
           }}
         >
-          <Tooltip title="Mở bộ lọc">
-            <Button
-              variant="outlined"
-              startIcon={<FilterListIcon />}
-              onClick={() => setFilterDialogOpen(true)}
+          Danh sách phiếu xuất kho
+        </Typography>
+      </Header>
+
+      <CardPaper>
+        <FilterBox>
+          <Typography>Trạng thái:</Typography>
+          <StyledSelect
+            value={statusFilter}
+            onChange={e => { setStatusFilter(e.target.value as string); setPage(0); }}
+            size="small"
+          >
+            <MenuItem value="">Tất cả</MenuItem>
+            <MenuItem value="Pending">Đang chờ</MenuItem>
+            <MenuItem value="Processing">Đang xử lý</MenuItem>
+            <MenuItem value="Completed">Hoàn thành</MenuItem>
+            <MenuItem value="Cancelled">Đã huỷ</MenuItem>
+          </StyledSelect>
+        </FilterBox>
+
+        {loading ? (
+          <Box display="flex" justifyContent="center" p={4}>
+            <CircularProgress size={48} />
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table sx={{ minWidth: 800 }}>
+              <TableHead sx={{ backgroundColor: '#000' }}>
+                <TableRow>
+                  {[
+
+                    { id: 'dispatchStoreDetailId', label: 'Mã chi tiết' },
+                    { id: 'warehouseName', label: 'Kho' },
+                    { id: 'allocatedQuantity', label: 'SL phân bổ' },
+                    { id: 'actualQuantity', label: 'SL thực tế' },
+
+                    { id: 'status', label: 'Trạng thái' },
+                    { id: 'comments', label: 'Ghi chú' },
+                    { id: 'handleByName', label: 'Người Gán Đơn' },
+                    { id: 'productName', label: 'Sản phẩm' },
+                    { id: 'sizeName', label: 'Size' },
+                    { id: 'colorName', label: 'Màu' },
+                    { id: 'action', label: 'Thao tác' }
+                  ].map(col => (
+                    <TableCell key={col.id} sx={{ color: '#fff', fontWeight: 'bold', px: 2 }}>
+                      {col.id !== 'action' ? (
+                        <TableSortLabel
+                          active={sortBy === col.id}
+                          direction={isDescending ? 'desc' : 'asc'}
+                          onClick={() => handleSort(col.id)}
+                          sx={{ color: '#fff' }}
+                        >
+                          {col.label}
+                        </TableSortLabel>
+                      ) : (
+                        col.label
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.map((row, idx) => (
+                  <TableRow
+                    key={row.dispatchStoreDetailId}
+                    hover
+                    onClick={() => router.push(`/staff-dispatch-request/${row.dispatchStoreDetailId}`)}
+                    sx={{
+                      backgroundColor: idx % 2 ? '#fafafa' : '#fff',
+                      cursor: 'pointer',
+                      '&:hover': { backgroundColor: '#f5f5f5' }
+                    }}
+                  >
+                    <TableCell sx={{ px: 2 }}>{row.dispatchStoreDetailId}</TableCell>
+
+                    <TableCell sx={{ px: 2 }}>{row.warehouseName}</TableCell>
+                    <TableCell sx={{ px: 2 }}>{row.allocatedQuantity}</TableCell>
+                    <TableCell sx={{ px: 2 }}>
+                      {row.actualQuantity != null ? row.actualQuantity : '-'}
+                    </TableCell>
+
+                    <TableCell sx={{ px: 2 }}>{row.status.trim()}</TableCell>
+                    <TableCell sx={{ px: 2 }}>{row.comments}</TableCell>
+                    <TableCell sx={{ px: 2 }}>{row.handleByName}</TableCell>
+                    <TableCell sx={{ px: 2 }}>{row.productName}</TableCell>
+                    <TableCell sx={{ px: 2 }}>{row.sizeName}</TableCell>
+                    <TableCell sx={{ px: 2 }}>{row.colorName}</TableCell>
+                    <TableCell sx={{ px: 2 }}>
+                      {row.status.trim() === 'Processing' && (
+                      <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Ngăn redirect khi click nút
+                        handleDoneClick(row);
+                      }}
+                    >
+                      Hoàn thành
+                    </Button>
+                    
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+
+        {/* Pagination */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
+          <Pagination
+            count={totalPages}
+            page={page + 1}
+            onChange={(_e, value) => setPage(value - 1)}
+            shape="rounded"
+          />
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography>Hiển thị:</Typography>
+            <StyledSelect
+              value={pageSize}
+              onChange={e => { setPageSize(Number(e.target.value)); setPage(0); }}
+              size="small"
+              sx={{ width: 80 }}
             >
-              Lọc dữ liệu
-            </Button>
-          </Tooltip>
-          <Typography variant="body2" color="text.secondary">
-            Tổng cộng: <Typography component="span" fontWeight={600}>{totalRecords}</Typography> bản ghi
-          </Typography>
+              {[5, 10, 25, 50].map(n => <MenuItem key={n} value={n}>{n}</MenuItem>)}
+            </StyledSelect>
+          </Box>
         </Box>
+      </CardPaper>
 
-        <Box sx={{ px: 3, pt: 2, backgroundColor: "#ffffff" }}>
-          {data.length === 0 ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-              <CircularProgress color="primary" />
-            </Box>
-          ) : (
-            <Card>
-              <CardContent sx={{ padding: 0 }}>
-                <DispatchStoreDetailTable
-                  data={data}
-                  onSortChange={handleSortChange}
-                  sortField={sortField}
-                  sortDirection={sortDirection}
-                  onFullStock={(id) => handleDone(id, "FullStock")}
-                  onAssign={(id) => toast.success(`Phân công #${id}`)}
-                />
-              </CardContent>
-            </Card>
-          )}
-        </Box>
+      {/* Dialog confirm */}
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+      >
+        <ConfirmDialogTitle>Xác nhận hoàn thành</ConfirmDialogTitle>
+        <ConfirmDialogContent>
+          <DialogContentText sx={{ color: '#000' }}>
+            Bạn có chắc chắn muốn xác nhận hoàn thành xuất hàng cho phiếu <strong>{selectedRow?.dispatchStoreDetailId}</strong> không?
+          </DialogContentText>
+        </ConfirmDialogContent>
+        <ConfirmDialogActions>
+          <CancelButton onClick={() => setOpenDialog(false)}>Huỷ</CancelButton>
+          <ConfirmButton onClick={handleConfirmDone} variant="contained">Xác nhận</ConfirmButton>
+        </ConfirmDialogActions>
+      </Dialog>
+    </Container>
 
-        <Box sx={{ px: 3, py: 2, display: "flex", justifyContent: "center", backgroundColor: "#f5f5f5" }}>
-          <DispatchStoreDetailPagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
-        </Box>
-
-        <DispatchStoreDetailFilterDialog
-          open={filterDialogOpen}
-          onClose={() => setFilterDialogOpen(false)}
-          onSubmit={handleFilterSubmit}
-          initialFilters={filters}
-        />
-        <CommentDialog
-          open={isCommentDialogOpen}
-          onClose={() => setIsCommentDialogOpen(false)}
-          onSubmit={handleSubmitComment}
-          actionType={actionType}
-        />
-        <ToastContainer position="top-right" autoClose={3000} />
-      </Paper>
-    </ThemeProvider>
   );
 };
 
-export default DispatchStoreDetailClient;
+export default StaffDispatchPage;
