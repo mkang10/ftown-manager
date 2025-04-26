@@ -81,7 +81,7 @@ export default function DashboardStaffShell({ children }: DashboardStaffShellPro
             activeDropdown={activeDropdown}
             setActiveDropdown={setActiveDropdown}
           />
-          <SidebarDropdown
+          {/* <SidebarDropdown
             id="packing"
             icon={<FiCheckCircle />}
             label="Đóng Gói"
@@ -89,7 +89,7 @@ export default function DashboardStaffShell({ children }: DashboardStaffShellPro
             subItems={[{ label: "Đóng Gói & Cập Nhật", route: "/staff/packing" }]}
             activeDropdown={activeDropdown}
             setActiveDropdown={setActiveDropdown}
-          />
+          /> */}
           <SidebarDropdown
             id="delivery"
             icon={<FiTruck />}
@@ -111,8 +111,8 @@ export default function DashboardStaffShell({ children }: DashboardStaffShellPro
             activeDropdown={activeDropdown}
             setActiveDropdown={setActiveDropdown}
           />
-          <SidebarItem icon={<FiMessageSquare />} label="Phản Hồi" isOpen={isSidebarOpen} route="/staff/feedback" />
-          <SidebarDropdown
+          {/* <SidebarItem icon={<FiMessageSquare />} label="Phản Hồi" isOpen={isSidebarOpen} route="/staff/feedback" /> */}
+          {/* <SidebarDropdown
             id="reports"
             icon={<FiTrendingUp />}
             label="Báo Cáo"
@@ -120,8 +120,8 @@ export default function DashboardStaffShell({ children }: DashboardStaffShellPro
             subItems={[{ label: "Thống Kê", route: "/staff/reports/statistics" }]}
             activeDropdown={activeDropdown}
             setActiveDropdown={setActiveDropdown}
-          />
-          <SidebarDropdown
+          /> */}
+          {/* <SidebarDropdown
             id="imports"
             icon={<FiBox />}
             label="Nhập Hàng"
@@ -129,7 +129,7 @@ export default function DashboardStaffShell({ children }: DashboardStaffShellPro
             subItems={[{ label: "Nhập Hàng", route: "/staff/imports" }]}
             activeDropdown={activeDropdown}
             setActiveDropdown={setActiveDropdown}
-          />
+          /> */}
         </nav>
       </aside>
 
