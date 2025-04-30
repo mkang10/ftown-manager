@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, Alert, Box, CircularProgress } from "@mui/material";
+import { Dialog, DialogContent, Alert, Box, CircularProgress, Switch, FormControlLabel } from "@mui/material";
 import { useRouter } from "next/navigation";
 import CreateInventoryImportModalHeader from "./CreateInventoryImportModalHeader";
 import CreateInventoryImportModalForm from "./CreateInventoryImportModalForm";
@@ -8,11 +8,12 @@ import CreateInventoryImportModalActions from "./CreateInventoryImportModalActio
 import { InventoryImportCreateRequest, InventoryImportCreateResponse } from "@/type/createInventoryImport";
 import { createInventoryImport } from "@/ultis/importapi";
 import { toast } from "react-toastify";
+import type { AxiosError } from "axios";
 
 interface CreateInventoryImportModalProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void; // Callback khi tạo đơn thành công
+  onSuccess: () => void;
 }
 
 const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({ open, onClose, onSuccess }) => {
@@ -20,6 +21,8 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
   const [formData, setFormData] = useState<InventoryImportCreateRequest>({
     createdBy: 0,
     handleBy: 0,
+    wareHouseId: 0,
+    isUrgent: false,
     originalImportId: null,
     importDetails: [
       {
@@ -27,11 +30,7 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
         costPrice: 0,
         quantity: 0,
         storeDetails: [
-          { 
-            wareHouseId: 0, 
-            allocatedQuantity: 0, 
-            handleBy: 0 
-          },
+          { allocatedQuantity: 0, handleBy: 0 },
         ],
       },
     ],
@@ -39,21 +38,23 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
-  // Khi modal mở, cập nhật thông tin từ localStorage
   useEffect(() => {
     if (open) {
       const storedAccount = localStorage.getItem("account");
       if (storedAccount) {
         const account = JSON.parse(storedAccount);
+        const storeId = account.roleDetails?.storeId ?? 0;
+  
         setFormData((prev) => ({
           ...prev,
           createdBy: account.accountId,
           handleBy: account.roleDetails?.shopManagerDetailId || account.accountId,
+          wareHouseId: storeId,                     // <- thêm dòng này
           importDetails: prev.importDetails.map((detail) => ({
             ...detail,
             storeDetails: detail.storeDetails.map((store) => ({
               ...store,
-              wareHouseId: account.roleDetails?.storeId ?? 0,
+              wareHouseId: storeId,                 // <- giữ như cũ nếu cần
               allocatedQuantity: detail.quantity,
               handleBy: account.roleDetails?.shopManagerDetailId || account.accountId,
             })),
@@ -66,12 +67,27 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
   const handleProductVariantChange = (variantId: number, rowIndex: number) => {
     setFormData((prev) => {
       const newDetails = [...prev.importDetails];
-      newDetails[rowIndex].productVariantId = variantId;
+  
+      // Đảm bảo phần tử tại rowIndex tồn tại
+      if (!newDetails[rowIndex]) {
+        newDetails[rowIndex] = {
+          productVariantId: variantId,
+          costPrice: 0,
+          quantity: 0,
+          storeDetails: [
+            {  allocatedQuantity: 0, handleBy: prev.handleBy },
+          ],
+        };
+      } else {
+        newDetails[rowIndex].productVariantId = variantId;
+      }
+  
       return { ...prev, importDetails: newDetails };
     });
   };
+  
 
-  const handlecostPriceChange = (rowIndex: number, value: number) => {
+  const handleCostPriceChange = (rowIndex: number, value: number) => {
     setFormData((prev) => {
       const newDetails = [...prev.importDetails];
       newDetails[rowIndex].costPrice = value;
@@ -93,35 +109,57 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Kiểm tra các dòng: nếu costPrice hoặc quantity âm thì không cho tạo
+  
+    // Kiểm tra giá hoặc số lượng âm
     const hasNegative = formData.importDetails.some(
       (detail) => detail.costPrice < 0 || detail.quantity < 0
     );
     if (hasNegative) {
-      setError("Giá hoặc số lượng không được âm. Vui lòng kiểm tra lại.");
-      toast.error("Giá hoặc số lượng không được âm. Vui lòng kiểm tra lại.");
+      const errMsg = "Giá hoặc số lượng không được âm. Vui lòng kiểm tra lại.";
+      setError(errMsg);
+      toast.error(errMsg);
       return;
     }
+  
     setLoading(true);
-    setError("");
-    try {
-      const data: InventoryImportCreateResponse = await createInventoryImport(formData);
-      if (data.status) {
-        toast.success("Inventory Import created successfully!");
-        onClose();
-        onSuccess();
-      } else {
-        setError(data.message);
-        toast.error(data.message || "Creation failed");
-      }
-    } catch (err) {
-      console.error("Submit error:", err);
-      setError("Có lỗi xảy ra khi tạo Inventory Import.");
-      toast.error("Có lỗi xảy ra khi tạo Inventory Import.");
-    } finally {
-      setLoading(false);
+  setError("");
+
+  try {
+    const response = await createInventoryImport(formData);
+    if (response.status) {
+      toast.success(response.message);
+      onClose();
+      onSuccess();
+    } else {
+      setError(response.message);
+      toast.error(response.message);
     }
-  };
+  } catch (err) {
+    console.error("Submit error:", err);
+    // nếu là axios error có response blob
+    const axiosErr = err as AxiosError<Blob>;
+    if (axiosErr.response) {
+      const blob = axiosErr.response.data;
+      const contentType =
+        axiosErr.response.headers["content-type"] || "";
+      if (contentType.includes("application/json")) {
+        const text = await blob.text();
+        const json = JSON.parse(text) as InventoryImportCreateResponse;
+        setError(json.message);
+        toast.error(json.message);
+        setLoading(false);
+        return;
+      }
+    }
+    // fallback chung
+    const errMsg = "Có lỗi xảy ra khi tạo phiếu nhập kho.";
+    setError(errMsg);
+    toast.error(errMsg);
+  } finally {
+    setLoading(false);
+  }
+};
+  
 
   const handleCancel = () => {
     onClose();
@@ -133,6 +171,21 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
       <DialogContent>
         {error && <Alert severity="error">{error}</Alert>}
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          {/* Nút isUrgent */}
+          <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.isUrgent}
+                  onChange={() => setFormData({ ...formData, isUrgent: !formData.isUrgent })}
+                  disabled={loading}
+                />
+              }
+              label="Gấp (isUrgent)"
+            />
+          </Box>
+
+          {/* Form chính */}
           <CreateInventoryImportModalForm
             formData={formData}
             onProductVariantChange={handleProductVariantChange}
@@ -141,6 +194,8 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
             onSubmit={handleSubmit}
             loading={loading}
           />
+
+          {/* Action buttons */}
           <CreateInventoryImportModalActions loading={loading} onCancel={handleCancel} />
         </Box>
         {loading && (

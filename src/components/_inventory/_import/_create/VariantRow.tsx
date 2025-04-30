@@ -85,32 +85,7 @@ const VariantRow: React.FC<VariantRowProps> = ({
         )}
       </Box>
       <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
-        <TextField
-          label="Đơn giá"
-          type="number"
-          value={localcostPrice}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            if (newValue !== "" && newValue[0] === "0") return;
-            // Cập nhật giá trị đã nhân với 1000
-            const num = newValue === "" ? 0 : parseFloat(newValue) * 1000;
-            setLocalcostPrice(newValue);  // Cập nhật lại giá trị người dùng nhập
-            oncostPriceChange(index, isNaN(num) ? 0 : num);  // Truyền giá trị nhân với 1000
-          }}
-          fullWidth
-          inputProps={{ min: 0 }}
-          error={costPriceNegativeError || freezecostPrice}
-          helperText={
-            freezecostPrice
-              ? "Đơn giá không được bắt đầu bằng số 0. Vui lòng xóa số 0."
-              : costPriceNegativeError
-              ? "Đơn giá phải là số dương"
-              : ""
-          }
-          InputProps={{
-            endAdornment: <Typography variant="body2">VND(đã tự động sử dụng đơn vị nghìn)</Typography>,
-          }}
-        />
+       
         <TextField
           label="Số lượng"
           type="number"

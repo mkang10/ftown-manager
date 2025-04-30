@@ -15,7 +15,7 @@ import axios, { AxiosInstance } from 'axios';
 
 const baseURL =
   process.env.NEXT_PUBLIC_API_URL ??
-  'https://ftadminservice.azurewebsites.net/api/';
+  'https://localhost:7267/api/';
 
 const adminClient: AxiosInstance = axios.create({
   baseURL,

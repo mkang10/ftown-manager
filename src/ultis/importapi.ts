@@ -23,13 +23,54 @@ export const createInventoryImport = async (
   data: InventoryImportCreateRequest
 ): Promise<InventoryImportCreateResponse> => {
   try {
-    const response = await shopmanagerclient.post<InventoryImportCreateResponse>(
+    // Gửi request và nhận về blob (có thể là file hoặc JSON)
+    const response = await shopmanagerclient.post<Blob>(
       "/inventoryimport/create",
-      data
+      data,
+      { responseType: "blob" }
     );
-    return response.data;
+
+    const blob = response.data;
+    const contentType = response.headers["content-type"] || "";
+
+    // Trường hợp server trả về JSON (ví dụ import bị reject)
+    if (contentType.includes("application/json")) {
+      // Đọc blob thành text rồi parse JSON
+      const text = await blob.text();
+      const json = JSON.parse(text) as InventoryImportCreateResponse;
+      return json;
+    }
+
+    // Ngược lại, server trả về file .docx — xử lý download
+    // Lấy tên file từ header nếu có
+    const contentDisposition = response.headers["content-disposition"];
+    let filename = "PhieuNhap.docx";
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (match && match[1]) {
+        filename = match[1].replace(/['"]/g, "");
+      }
+    }
+
+    // Tạo URL cho blob và trigger download
+    const blobUrl = window.URL.createObjectURL(new Blob([blob]));
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+
+    // Trả về kết quả thành công
+    return {
+      status: true,
+      message: "Tạo import thành công và file biên bản đã được tải về.",
+      data: null,
+    };
   } catch (error) {
     console.error("Error creating inventory import:", error);
+    // Ném thẳng error ra cho caller tự xử lý (như toast trong handleSubmit)
     throw error;
   }
 };
@@ -70,13 +111,13 @@ export const filterInventoryImports = async (
     throw error;
   }
 };
-
 export const getProductVariants = async (
   page: number = 1,
-  pageSize: number = 5
+  pageSize: number = 5,
+  search: string = ""
 ): Promise<{ data: productVariant[]; totalRecords: number }> => {
   try {
-    const response = await apiclient.get<{
+    const response = await shopmanagerclient.get<{
       data: {
         data: productVariant[];
         totalRecords: number;
@@ -85,7 +126,12 @@ export const getProductVariants = async (
       };
       status: boolean;
       message: string;
-    }>(`/inventoryimport/product?page=${page}&pageSize=${pageSize}`);
+    }>(
+      `/inventoryimport/product`, 
+      {
+        params: { page, pageSize, search }
+      }
+    );
     if (response.data.status) {
       return {
         data: response.data.data.data,
@@ -197,5 +243,65 @@ export const getImportById = async (
     `/inventoryimport/${importId}`
   );
   return response.data.data;
+};
+
+
+
+export const importInventoryFromExcel = async (
+  file: File,
+  warehouseId: number | string,
+  createdBy: number
+): Promise<InventoryImportCreateResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('warehouseId', warehouseId.toString());
+  formData.append('createdBy', createdBy.toString());
+
+  // Luôn dùng blob để có thể đọc cả file lẫn JSON lỗi
+  const response = await shopmanagerclient.post('/inventoryimport/create-from-excel', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    responseType: 'blob',
+  });
+
+  // Lấy content-type để phân biệt
+  const contentType = response.headers['content-type'] || '';
+
+  if (contentType.includes('application/json')) {
+    // Server trả JSON (trường hợp đơn bị reject hoặc lỗi khác)
+    const text = await response.data.text();
+    const json = JSON.parse(text) as InventoryImportCreateResponse;
+    return json;
+  }
+
+  // Ngược lại, server trả file docx → thực hiện download
+  // Lấy tên file từ header nếu có
+  const contentDisp = response.headers['content-disposition'] as string | undefined;
+  let filename = 'PhieuNhap.docx';
+  if (contentDisp) {
+    const match = contentDisp.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    if (match && match[1]) {
+      filename = match[1].replace(/['"]/g, '');
+    }
+  }
+
+  // Tạo URL blob và trigger download
+  const blob = new Blob([response.data], {
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  });
+  const blobUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.setAttribute('download', filename);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(blobUrl);
+
+  // Trả về response thành công
+  return {
+    status: true,
+    message: 'Tạo import thành công và file biên bản đã được tải về.',
+    data: null,
+  };
 };
 

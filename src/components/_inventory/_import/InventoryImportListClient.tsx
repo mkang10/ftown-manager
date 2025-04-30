@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Paper,
   Typography,
@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { filterInventoryImports } from "@/ultis/importapi";
+import { filterInventoryImports, importInventoryFromExcel } from "@/ultis/importapi";
 import { InventoryImportItem } from "@/type/InventoryImport";
 import FilterDialog, { FilterData } from "@/components/_inventory/_import/FilterForm";
 import InventoryImportTable from "@/components/_inventory/_import/InventoryImportTable";
@@ -24,6 +24,8 @@ const InventoryImportListClient: React.FC = () => {
   const [filterDialogOpen, setFilterDialogOpen] = useState<boolean>(false);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [openModal, setOpenModal] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [filters, setFilters] = useState<FilterData>({
     Status: "",
@@ -97,6 +99,49 @@ const InventoryImportListClient: React.FC = () => {
     fetchData(filters);
   };
 
+  // Khi click nút: mở file picker
+  const onClickImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  // ── trong InventoryImportListClient.tsx ──
+const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  // Lấy accountId và warehouseId từ localStorage
+  const stored = localStorage.getItem("account");
+  const account = stored ? JSON.parse(stored) : null;
+  const warehouseId = account?.roleDetails?.storeId ?? 0;
+  const createdBy   = account?.accountId           ?? 0;
+
+  if (!warehouseId) {
+    toast.error("Vui lòng chọn kho trước khi nhập từ Excel.");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    return;
+  }
+
+  setLoading(true);
+  try {
+    // Gọi API với thêm warehouseId và createdBy
+    const response = await importInventoryFromExcel(file, warehouseId, createdBy);
+    if (!response.status) {
+      toast.error(response.message);
+    } else {
+      toast.success(response.message);
+      fetchData(filters);
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("Có lỗi khi nhập từ Excel. Vui lòng thử lại.");
+  } finally {
+    setLoading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+};
+
+  
+  
   const totalPages = Math.ceil(totalCount / Number(filters.PageSize));
 
   return (
@@ -145,6 +190,28 @@ const InventoryImportListClient: React.FC = () => {
           >
             Tạo phiếu
           </Button>
+          <Button
+            variant="contained"
+            onClick={onClickImport}
+            disabled={loading}
+            sx={{
+              textTransform: 'none',
+              backgroundColor: '#00695c',
+              color: '#fff',
+              '&:hover': { backgroundColor: '#004d40' },
+              fontWeight: 500
+            }}
+          >
+            Nhập từ Excel
+          </Button>
+          {/* input ẩn để chọn file */}
+          <input
+            type="file"
+            accept=".xlsx, .xls"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={onFileChange}
+          />
         </Box>
         <CreateInventoryImportModal
           open={openModal}
@@ -167,11 +234,10 @@ const InventoryImportListClient: React.FC = () => {
         ) : (
           <InventoryImportTable
             items={inventoryImports}
-            sortBy={filters.SortBy ?? 'ImportId'}         // fallback nếu SortBy undefined
-            isDescending={filters.IsDescending ?? false}  // fallback nếu IsDescending undefined
+            sortBy={filters.SortBy ?? 'ImportId'}
+            isDescending={filters.IsDescending ?? false}
             onSortChange={handleSortChange}
           />
-
         )}
       </Paper>
 
