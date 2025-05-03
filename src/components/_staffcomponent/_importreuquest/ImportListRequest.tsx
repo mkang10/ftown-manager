@@ -1,22 +1,26 @@
 "use client";
 
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import DashboardLayoutStaff from "@/layout/DashboardStaffLayout";
 import {
   Box,
-  Paper,
   Typography,
-  Button,
-  Alert,
+  IconButton,
+  Card,
+  CardContent,
+  TableContainer,
+  Paper,
+  CircularProgress,
   Pagination,
-  useTheme,
-  useMediaQuery,
+  Stack,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { FilterList as FilterListIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -25,200 +29,207 @@ import {
   StaffImportFilterDto,
   StaffInventoryImportStoreDetailDto,
 } from "@/type/importStaff";
-import StaffFilterForm, {
-  StaffFilterFormData,
-} from "@/components/_staffcomponent/_importreuquest/StaffFilterForm";
+import StaffFilterForm, { StaffFilterFormData } from "@/components/_staffcomponent/_importreuquest/StaffFilterForm";
 import StaffImportRequestTable from "@/components/_staffcomponent/_importreuquest/StaffImportRequestTable";
 import EmptyState from "@/components/_loading/EmptyState";
 
-const defaultFilters = {
-  StaffDetailId: 0,
-  Status: undefined,
-  SortBy: "importStoreId",
-  IsDescending: true,
-  Page: 1,
-  PageSize: 10,
-};
+// Container with white background and padding
+const Container = styled(Box)(() => ({
+  backgroundColor: '#ffffff',
+  minHeight: '100vh',
+  padding: '32px',
+}));
+
+// Header layout
+const Header = styled(Box)(() => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '24px',
+}));
+
+// Filter panel styling
+const FilterCard = styled(Card)(() => ({
+  marginBottom: '24px',
+  borderRadius: '12px',
+  border: '1px solid #000',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+}));
+
+// Base button for actions
+const BaseButton = styled(Button)(() => ({
+  borderRadius: '20px',
+  textTransform: 'none',
+  fontWeight: 600,
+  padding: '6px 16px',
+  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+  transition: 'transform 0.1s, box-shadow 0.1s',
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+  },
+}));
+
+// Icon buttons for filter/refresh
+const ActionIconButton = styled(IconButton)(() => ({
+  backgroundColor: '#fff',
+  border: '1px solid #000',
+  padding: '8px',
+  '& svg': { color: '#000' },
+  '&:hover': {
+    backgroundColor: '#000',
+    '& svg': { color: '#fff' },
+  },
+}));
+
+// Primary action button
+const ActionButton = styled(BaseButton)(() => ({
+  backgroundColor: '#000',
+  color: '#fff',
+  '&:hover': {
+    backgroundColor: '#333',
+  },
+}));
 
 const ImportListRequest: React.FC = () => {
-  const [staffImportRequests, setStaffImportRequests] = useState<
-    StaffInventoryImportStoreDetailDto[]
-  >([]);
+  const [items, setItems] = useState<StaffInventoryImportStoreDetailDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [totalCount, setTotalCount] = useState(0);
-  const [filterOpen, setFilterOpen] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [filters, setFilters] = useState<StaffImportFilterDto>(() => {
+    const stored = typeof window !== 'undefined' && localStorage.getItem('account');
+    const staffId = stored ? JSON.parse(stored).roleDetails?.staffDetailId ?? 0 : 0;
+    return {
+      StaffDetailId: staffId,
+      Status: undefined,
+      SortBy: "importStoreId",
+      IsDescending: true,
+      Page: 1,
+      PageSize: 10,
+    };
+  });
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const initialFilters = useMemo<StaffImportFilterDto>(() => {
-    const stored =
-      typeof window !== "undefined" && localStorage.getItem("account");
-    const staffId = stored
-      ? JSON.parse(stored).roleDetails?.staffDetailId ?? 0
-      : 0;
-    return { ...defaultFilters, StaffDetailId: staffId };
-  }, []);
-
-  const [filters, setFilters] = useState<StaffImportFilterDto>(initialFilters);
-
-  const fetchData = useCallback(
-    async (customFilters: StaffImportFilterDto, skipLoading = false) => {
-      if (!skipLoading) setLoading(true);
-      setError("");
-
-      try {
-        const apiFilters = {
-          ...customFilters,
-          staffId: customFilters.StaffDetailId,
-        };
-        const response = await filterStaffInventoryImports(apiFilters);
-
-        if (response.status) {
-          setStaffImportRequests(response.data.data);
-          setTotalCount(response.data.totalRecords);
-        } else {
-          setError(response.message || "Lỗi khi tải dữ liệu");
-        }
-      } catch (err) {
-        setError("Đã xảy ra lỗi khi tải dữ liệu.");
-      } finally {
-        setLoading(false);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const apiFilters = {
+        ...filters,
+        Status: statusFilter !== 'All' ? statusFilter : undefined,
+        staffId: filters.StaffDetailId,
+      };
+      const response = await filterStaffInventoryImports(apiFilters);
+      if (response.status) {
+        setItems(response.data.data);
+        setTotal(response.data.totalRecords);
+      } else {
+        setError(response.message || "Lỗi khi tải dữ liệu");
       }
-    },
-    []
-  );
+    } catch {
+      setError("Đã xảy ra lỗi khi tải dữ liệu.");
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, statusFilter]);
 
   useEffect(() => {
-    fetchData(initialFilters);
-  }, [fetchData, initialFilters]);
+    fetchData();
+  }, [fetchData]);
 
-  const refreshData = () => fetchData(filters, true);
-
+  const refreshData = () => fetchData();
   const handleFilterSubmit = (data: StaffFilterFormData) => {
-    const nf = { ...data, StaffDetailId: filters.StaffDetailId };
+    const nf = { ...filters, ...data, StaffDetailId: filters.StaffDetailId };
     setFilters(nf);
-    fetchData(nf);
-    setFilterOpen(false);
+    setStatusFilter(data.Status ?? 'All');
+    setFiltersOpen(false);
+    fetchData();
   };
 
   const handlePageChange = (_: any, page: number) => {
     const nf = { ...filters, Page: page };
     setFilters(nf);
-    fetchData(nf);
+    fetchData();
   };
-
-  const handleSortChange = (sortField: string, isDescending: boolean) => {
-    const nf = {
-      ...filters,
-      SortBy: sortField,
-      IsDescending: isDescending,
-      Page: 1,
-    };
-    setFilters(nf);
-    fetchData(nf);
-  };
-
-  const totalPages = Math.ceil(totalCount / (filters.PageSize || 10));
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, backgroundColor: "#f7f7f7", minHeight: "100vh" }}>
-      <Paper
-        elevation={3}
-        sx={{
-          p: 3,
-          mb: 2,
-          backgroundColor: "#fff",
-          borderRadius: 3,
-          border: "1px solid #000",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <Typography
-            variant={isMobile ? "h6" : "h5"}
-            fontWeight="bold"
-            sx={{ fontFamily: "'Roboto Slab', serif", color: "#000" }}
-          >
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <Container>
+        <Header>
+          <Typography variant="h4" fontWeight="bold" sx={{ fontFamily: 'Inter', color: '#111' }}>
             Yêu cầu nhập kho của nhân viên
           </Typography>
-          <Button
-            variant="outlined"
-            sx={{
-              color: "#000",
-              borderColor: "#000",
-              fontWeight: 600,
-              ":hover": {
-                backgroundColor: "#000",
-                color: "#fff",
-              },
-            }}
-            onClick={() => setFilterOpen(true)}
-          >
-            Bộ lọc
-          </Button>
-        </Box>
-      </Paper>
+          <Stack direction="row" spacing={1}>
+            <ActionIconButton onClick={() => setFiltersOpen(!filtersOpen)}>
+              <FilterListIcon />
+            </ActionIconButton>
+            <ActionIconButton onClick={refreshData}>
+              <RefreshIcon />
+            </ActionIconButton>
+          </Stack>
+        </Header>
 
-      {error && <Alert severity="error">{error}</Alert>}
+        {filtersOpen && (
+          <FilterCard>
+            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={statusFilter}
+                  label="Status"
+                  onChange={e => setStatusFilter(e.target.value)}
+                >
+                  {['All', 'Pending', 'Processing', 'Completed', 'Cancelled'].map(s => (
+                    <MenuItem key={s} value={s}>{s}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+             
+            </CardContent>
+          </FilterCard>
+        )}
 
-      {!loading && staffImportRequests.length === 0 ? (
-        <EmptyState loading={false} />
-      ) : (
-        <Box sx={{ overflowX: "auto" }}>
-          <StaffImportRequestTable
-            items={staffImportRequests}
-            loading={loading}
-            onSortChange={handleSortChange}
-            sortBy={filters.SortBy ?? "importStoreId"}
-            isDescending={filters.IsDescending ?? false}
-            refreshData={refreshData}
+        {error && (
+          <Typography color="error" mb={2}>{error}</Typography>
+        )}
+
+        {loading ? (
+          <Box display="flex" justifyContent="center" mt={4}>
+            <CircularProgress size={60} />
+          </Box>
+        ) : items.length === 0 ? (
+          <EmptyState loading={false} />
+        ) : (
+          <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 4, mb: 4 }}>
+            <StaffImportRequestTable
+              items={items}
+              loading={loading}
+              onSortChange={(sortBy, isDesc) => {
+                const nf = { ...filters, SortBy: sortBy, IsDescending: isDesc, Page: 1 };
+                setFilters(nf);
+                fetchData();
+              }}
+              sortBy={filters.SortBy!}
+              isDescending={filters.IsDescending!}
+              refreshData={refreshData}
+            />
+          </TableContainer>
+        )}
+
+        <Box display="flex" justifyContent="center">
+          <Pagination
+            count={Math.ceil(total / (filters.PageSize!))}
+            page={filters.Page!}
+            onChange={handlePageChange}
+            shape="rounded"
+            showFirstButton
+            showLastButton
           />
         </Box>
-      )}
-
-      <StaffFilterForm
-        open={filterOpen}
-        onClose={() => setFilterOpen(false)}
-        onSubmit={handleFilterSubmit}
-        initialFilters={filters}
-      />
-
-      <Box
-        sx={{
-          position: { xs: "static", md: "fixed" },
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: "#fff",
-          py: 2,
-          boxShadow: 3,
-          zIndex: 1300,
-          display: "flex",
-          justifyContent: "center",
-          borderTop: "1px solid #000",
-          mt: { xs: 2, md: 0 },
-        }}
-      >
-        <Pagination
-          count={totalPages}
-          page={filters.Page}
-          onChange={handlePageChange}
-          size={isMobile ? "small" : "medium"}
-          color="primary"
-        />
-      </Box>
-
-      <ToastContainer />
-    </Box>
+      </Container>
+    </>
   );
 };
 

@@ -263,7 +263,18 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         onSubmit={handleApplyFilters}
         initialFilters={filters}
       />
-      <ToastContainer />
+      <ToastContainer
+  position="top-right"
+  autoClose={3000} // 3 giây, bạn có thể thay đổi số này
+  hideProgressBar={false}
+  newestOnTop={false}
+  closeOnClick
+  rtl={false}
+  pauseOnFocusLoss
+  draggable
+  pauseOnHover
+/>
+
     </Box>
   );
 };

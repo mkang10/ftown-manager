@@ -24,8 +24,7 @@ import {
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { getImportStoreDetailById } from "@/ultis/importstoredetail";
-import { ImportStoreDetail } from "@/type/importstore";
-import { AuditLog } from "@/type/importdetail";
+import { AuditLog, ImportStoreDetail } from "@/type/importstore";
 
 const ImportStoreDetailPage: React.FC = () => {
   const router = useRouter();
@@ -166,7 +165,7 @@ const ImportStoreDetailPage: React.FC = () => {
                 <TableRow key={log.auditLogId} hover>
                   <TableCell>{log.operation}</TableCell>
                   <TableCell>{formatDate(log.changeDate)}</TableCell>
-                  <TableCell>{log.changedBy}</TableCell>
+                  <TableCell>{log.changedByName}</TableCell>
                   <TableCell>{log.comment}</TableCell>
                 </TableRow>
               ))}

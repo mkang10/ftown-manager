@@ -202,7 +202,7 @@ const DispatchStoreExportDetailPage: React.FC = () => {
                 <TableRow key={log.auditLogId} hover>
                   <TableCell>{log.operation}</TableCell>
                   <TableCell>{formatDate(log.changeDate)}</TableCell>
-                  <TableCell>{log.changedBy}</TableCell>
+                  <TableCell>{log.changedByName}</TableCell>
                   <TableCell>{log.comment || '-'}</TableCell>
                 </TableRow>
               ))
