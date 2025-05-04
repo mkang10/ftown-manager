@@ -3,6 +3,9 @@ import shopmanagerclient from "./ShopmanagerClient";
 import { AssignStaffResponse } from "@/type/Staff";
 import { CompleteOrderResponse } from "@/type/completeOrder";
 import { AssignmentOrderResponse } from "@/type/orderdetail";
+import { GetReturnRequestsParams, ReturnRequestsResponse } from "@/type/returnrequest";
+import { AxiosResponse } from "axios";
+import orderclient from "./orderclient";
 
 export const getOrdersManager = async (
   page: number,
@@ -183,6 +186,21 @@ export const getAssignmentManagerOrders = async (
     return response.data;
   } catch (error) {
     console.error('Lỗi khi tải danh sách đơn hàng:', error);
+    throw error;
+  }
+};
+
+export const getReturnRequests = async (
+  params: GetReturnRequestsParams
+): Promise<ReturnRequestsResponse> => {
+  try {
+    const response: AxiosResponse<ReturnRequestsResponse> = await orderclient.get(
+      "/return-requests/all",
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching return requests:", error);
     throw error;
   }
 };
