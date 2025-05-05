@@ -1,6 +1,5 @@
 "use client"
 import { ToastContainer, toast } from 'react-toastify';
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { getAssignmentManagerOrders, completeOrder } from '@/ultis/OrderAPI';
 import {
@@ -34,6 +33,7 @@ import {
   DialogActions,
   Snackbar,
   Alert,
+  Chip,                         // thêm Chip
 } from '@mui/material';
 import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
@@ -48,51 +48,60 @@ interface RowProps {
   onRefresh: () => void;
 }
 
+// Hàm lấy màu background theo trạng thái
+const getStatusColor = (status?: string) => {
+  switch (status) {
+    case 'Pending Confirmed':
+      return '#FFD54F';       // vàng nhạt
+    case 'Confirmed':
+      return '#42A5F5';       // xanh dương
+    case 'Delivering':
+      return '#FFA726';       // cam
+    case 'Delivered':
+      return '#81C784';       // xanh lá nhạt
+    case 'Completed':
+      return '#66BB6A';       // xanh lá
+    case 'Cancelled':
+      return '#EF5350';       // đỏ
+    default:
+      return '#BDBDBD';       // xám
+  }
+};
+
+
 const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
   const [open, setOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [toastState, setToastState] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
-  
 
   const handleDoneClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setConfirmOpen(true);
   };
-
   const handleConfirmClose = () => setConfirmOpen(false);
-
   const handleConfirmYes = async () => {
     setConfirmOpen(false);
     try {
       if (row.order?.orderId) {
-        // Giả sử completeOrder là API hoàn tất đơn hàng
         await completeOrder(row.order.orderId);
-        // Hiển thị thông báo thành công
         toast.success('Hoàn thành đơn hàng thành công!');
-        onRefresh(); // Hàm này sẽ reload lại danh sách đơn hàng
+        onRefresh();
       }
     } catch (error) {
       console.error('Error completing order:', error);
-      // Hiển thị thông báo lỗi
       toast.error('Lỗi khi hoàn thành đơn hàng!');
     }
   };
-
 
   return (
     <>
       <TableRow hover sx={{ '& > *': { borderBottom: 'unset' }, cursor: 'pointer' }} onClick={() => setOpen(!open)}>
         <TableCell>
-          <IconButton size="small" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
+          <IconButton size="small" onClick={e => { e.stopPropagation(); setOpen(!open); }}>
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
-        <TableCell>{row.assignmentId}</TableCell>
+        {/* <TableCell>{row.assignmentId}</TableCell> */}
         <TableCell>{row.order?.orderId}</TableCell>
         <TableCell>{row.order?.createdDate ? new Date(row.order.createdDate).toLocaleDateString() : ''}</TableCell>
         <TableCell>{row.order?.fullName}</TableCell>
@@ -100,11 +109,24 @@ const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
         <TableCell>{row.order?.phoneNumber}</TableCell>
         <TableCell>{[row.order?.address, row.order?.district, row.order?.city].filter(Boolean).join(', ')}</TableCell>
         <TableCell>{row.assignmentDate ? new Date(row.assignmentDate).toLocaleDateString() : ''}</TableCell>
-        <TableCell>{row.order?.status}</TableCell>
+        {/* Thay đổi ở đây: hiển thị Chip với màu tương ứng */}
+        <TableCell>
+          <Chip
+            label={row.order?.status}
+            size="small"
+            sx={{
+              backgroundColor: getStatusColor(row.order?.status),
+              color: '#fff',
+              borderRadius: '16px',
+              fontWeight: 500,
+              textTransform: 'none',
+            }}
+          />
+        </TableCell>
         <TableCell>{row.order?.orderTotal.toLocaleString()} VND</TableCell>
         <TableCell>{row.order?.shippingCost.toLocaleString()}</TableCell>
         <TableCell>
-          {row.order?.status === 'Processing' ? (
+          {row.order?.status === 'Pending Confirmed' ? (
             <Button
               variant="contained"
               size="small"
@@ -114,31 +136,31 @@ const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
                 borderRadius: 3,
                 fontWeight: 500,
                 textTransform: 'none',
-                '&:hover': {
-                  backgroundColor: '#333',
-                },
+                '&:hover': { backgroundColor: '#333' },
               }}
               onClick={handleDoneClick}
             >
-              Hoàn tất
+              Xác nhận 
             </Button>
-
           ) : (
             <Typography variant="body2" color="text.secondary">No Action</Typography>
           )}
         </TableCell>
       </TableRow>
 
+      {/* Phần Collapse chi tiết sản phẩm */}
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={13}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box margin={2} p={3} bgcolor="#fdfdfd" borderRadius={3} boxShadow={2}>
-              <Typography variant="h6" gutterBottom fontWeight={600} color="black">Chi tiết sản phẩm</Typography>
+              <Typography variant="h6" gutterBottom fontWeight={600} color="black">
+                Chi tiết sản phẩm
+              </Typography>
               <Table size="small">
                 <TableHead sx={{ bgcolor: '#f8f8f8' }}>
                   <TableRow sx={{ backgroundColor: '#f0f4f8' }}>
                     <TableCell>Tên sản phẩm</TableCell>
-                    <TableCell>Phiên bản</TableCell>
+                    <TableCell>Hình ảnh</TableCell>
                     <TableCell>Kích cỡ</TableCell>
                     <TableCell>Màu sắc</TableCell>
                     <TableCell>Số lượng</TableCell>
@@ -147,11 +169,26 @@ const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {row.order?.orderDetails.map((detail) => (
+                  {row.order?.orderDetails.map(detail => (
                     <TableRow key={detail.orderDetailId} hover>
                       <TableCell>{detail.productName}</TableCell>
-                      <TableCell>{detail.variantName || '-'}</TableCell>
-                      <TableCell>{detail.sizeName}</TableCell>
+                      <TableCell>
+                        {detail.imageUrl
+                          ? (
+                            <img
+                              src={detail.imageUrl}
+                              alt={detail.productName}
+                              style={{
+                                width: 60,
+                                height: 60,
+                                objectFit: 'cover',
+                                borderRadius: 4
+                              }}
+                            />
+                          )
+                          : '–'
+                        }
+                      </TableCell>                      <TableCell>{detail.sizeName}</TableCell>
                       <TableCell>{detail.colorName}</TableCell>
                       <TableCell>{detail.quantity}</TableCell>
                       <TableCell>{detail.priceAtPurchase.toLocaleString()} VND</TableCell>
@@ -184,8 +221,6 @@ const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
           </Button>
         </DialogActions>
       </Dialog>
-
-    
     </>
   );
 };
@@ -220,7 +255,7 @@ const StaffOrderPage: React.FC = () => {
     fromDate.setDate(toDate.getDate() - days);
     setAssignmentDateFrom(fromDate.toISOString().split('T')[0]);
     setAssignmentDateTo(toDate.toISOString().split('T')[0]);
-    setFilters((prev) => ({ ...prev, page: 1 }));
+    setFilters(prev => ({ ...prev, page: 1 }));
   };
 
   const fetchData = useCallback(async () => {
@@ -247,32 +282,30 @@ const StaffOrderPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-          <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={3000} />
 
       <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: '#111', fontFamily: 'Inter' }}>
         Quản lý đơn hàng
       </Typography>
-
 
       <Card sx={{ mb: 3, borderRadius: 4, border: '1px solid #ccc', background: '#fff', boxShadow: 'none' }}>
         <CardHeader
           avatar={<IconButton onClick={() => setFilterOpen(!filterOpen)}><FilterListIcon sx={{ color: '#111' }} /></IconButton>}
           title={<Typography variant="subtitle1" sx={{ color: '#111', fontWeight: 500 }}>Bộ lọc nâng cao</Typography>}
         />
-
         <Collapse in={filterOpen} timeout="auto" unmountOnExit>
           <CardContent>
             <Grid container spacing={3} alignItems="center">
               <Grid item xs={12} md={3}>
-                <TextField fullWidth label="Từ ngày" type="date" value={assignmentDateFrom} onChange={(e) => setAssignmentDateFrom(e.target.value)} InputLabelProps={{ shrink: true }} />
+                <TextField fullWidth label="Từ ngày" type="date" value={assignmentDateFrom} onChange={e => setAssignmentDateFrom(e.target.value)} InputLabelProps={{ shrink: true }} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <TextField fullWidth label="Đến ngày" type="date" value={assignmentDateTo} onChange={(e) => setAssignmentDateTo(e.target.value)} InputLabelProps={{ shrink: true }} />
+                <TextField fullWidth label="Đến ngày" type="date" value={assignmentDateTo} onChange={e => setAssignmentDateTo(e.target.value)} InputLabelProps={{ shrink: true }} />
               </Grid>
               <Grid item xs={12} md={3}>
                 <FormControl fullWidth>
                   <InputLabel>Trạng thái đơn</InputLabel>
-                  <Select value={orderStatus} label="Trạng thái đơn" onChange={(e) => setOrderStatus(e.target.value)}>
+                  <Select value={orderStatus} label="Trạng thái đơn" onChange={e => setOrderStatus(e.target.value)}>
                     <MenuItem value="">Tất cả</MenuItem>
                     <MenuItem value="Pending">Pending</MenuItem>
                     <MenuItem value="Shipped">Shipped</MenuItem>
@@ -282,7 +315,7 @@ const StaffOrderPage: React.FC = () => {
                 </FormControl>
               </Grid>
               <Grid item xs={12} md={2}>
-                <TextField fullWidth label="Tên khách" placeholder="Nhập tên khách" value={fullNameContains} onChange={(e) => setFullNameContains(e.target.value)} />
+                <TextField fullWidth label="Tên khách" placeholder="Nhập tên khách" value={fullNameContains} onChange={e => setFullNameContains(e.target.value)} />
               </Grid>
               <Grid item xs={12} md={1}>
                 <Button
@@ -293,34 +326,31 @@ const StaffOrderPage: React.FC = () => {
                     color: '#fff',
                     textTransform: 'none',
                     borderRadius: 3,
-                    '&:hover': {
-                      backgroundColor: '#333',
-                    },
+                    '&:hover': { backgroundColor: '#333' },
                   }}
-                  onClick={() => setFilters((prev) => ({ ...prev, page: 1 }))}
+                  onClick={() => setFilters(prev => ({ ...prev, page: 1 }))}
                 >
                   Tìm
                 </Button>
               </Grid>
               <Grid item xs={12}>
                 <Stack direction="row" spacing={1}>
-                  {predefinedRanges.map((range) => <Button
-                    key={range.value}
-                    variant="contained"
-                    onClick={() => handleQuickRange(range.value)}
-                    sx={{
-                      backgroundColor: '#111',
-                      color: '#fff',
-                      textTransform: 'none',
-                      borderRadius: 3,
-                      '&:hover': {
-                        backgroundColor: '#333',
-                      },
-                    }}
-                  >
-                    {range.label}
-                  </Button>
-                  )}
+                  {predefinedRanges.map(range => (
+                    <Button
+                      key={range.value}
+                      variant="contained"
+                      onClick={() => handleQuickRange(range.value)}
+                      sx={{
+                        backgroundColor: '#111',
+                        color: '#fff',
+                        textTransform: 'none',
+                        borderRadius: 3,
+                        '&:hover': { backgroundColor: '#333' },
+                      }}
+                    >
+                      {range.label}
+                    </Button>
+                  ))}
                 </Stack>
               </Grid>
             </Grid>
@@ -330,16 +360,18 @@ const StaffOrderPage: React.FC = () => {
 
       <Box sx={{ width: '100%', position: 'relative' }}>
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}><CircularProgress size={60} thickness={5} /></Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+            <CircularProgress size={60} thickness={5} />
+          </Box>
         ) : (
           <>
-            <TableContainer component={Paper} sx={{ borderRadius: 4, boxShadow: 4 }}>
+           <TableContainer component={Paper} sx={{ borderRadius: 4, boxShadow: 4 }}>
               <Table>
                <TableHead sx={{ bgcolor: 'black', color: 'white' }}>
 
                   <TableRow>
                     <TableCell />
-                    <TableCell sx={{ color: "white" }}>Mã phân công</TableCell>
+                    {/* <TableCell sx={{ color: "white" }}>Mã phân công</TableCell> */}
                     <TableCell sx={{ color: "white" }}>Mã đơn</TableCell>
                     <TableCell sx={{ color: "white" }}>Ngày tạo</TableCell>
                     <TableCell sx={{ color: "white" }}>Khách hàng</TableCell>
@@ -363,7 +395,7 @@ const StaffOrderPage: React.FC = () => {
               <Pagination
                 count={Math.ceil(rowCount / (filters.pageSize || 10))}
                 page={filters.page || 1}
-                onChange={(_, newPage) => setFilters((prev) => ({ ...prev, page: newPage }))}
+                onChange={(_, newPage) => setFilters(prev => ({ ...prev, page: newPage }))}
                 color="standard"
                 size="large"
                 shape="rounded"

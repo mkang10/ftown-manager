@@ -75,7 +75,7 @@ export default function DashboardStaffShell({ children }: DashboardStaffShellPro
             label="Đơn Hàng"
             isOpen={isSidebarOpen}
             subItems={[
-              { label: "Nhận Đơn", route: "/orders/receive" },
+              // { label: "Nhận Đơn", route: "/orders/receive" },
               { label: "Xác Nhận Đơn", route: "/order/order-confirm" },
             ]}
             activeDropdown={activeDropdown}

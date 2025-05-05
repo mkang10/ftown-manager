@@ -45,6 +45,7 @@ export interface OrderAssignment {
     discountApplied: number;
     sizeName: string;
     colorName: string;
+    imageUrl: string 
   }
   
   export interface OrderInfo {
