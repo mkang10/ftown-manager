@@ -70,7 +70,7 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
               isOpen={isSidebarOpen}
               route="/dashboard"
             />
-
+{/* 
             <SidebarDropdown
               id="products"
               icon={<FiBox />}
@@ -83,7 +83,7 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
-            />
+            /> */}
 
             <SidebarDropdown
               id="orders"
@@ -92,8 +92,7 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
               isOpen={isSidebarOpen}
               subItems={[
                 { label: "Phân Công Đơn Hàng", route: "/order/order-assign" },
-                { label: "Giao Hàng", route: "/order/delivery" },
-                { label: "Xử Lý Khiếu Nại", route: "/order/complaints" },
+                { label: "Xử Lý Khiếu Nại", route: "/order/return-order" },
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
@@ -125,7 +124,7 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
               setActiveDropdown={setActiveDropdown}
             />
 
-            <SidebarDropdown
+            {/* <SidebarDropdown
               id="promotions"
               icon={<FiTrendingUp />}
               label="Khuyến Mãi"
@@ -135,9 +134,9 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
-            />
+            /> */}
 
-            <SidebarDropdown
+            {/* <SidebarDropdown
               id="reports"
               icon={<FiSettings />}
               label="Báo Cáo"
@@ -148,7 +147,7 @@ const DashboardShell: React.FC<DashboardLayoutProps> = ({ children }) => {
               ]}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
-            />
+            /> */}
           </nav>
 
         </aside>

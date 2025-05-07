@@ -1,80 +1,60 @@
-
-// Model chi tiết sản phẩm trả lại
-export interface ReturnItem {
-  productVariantId: number;
-  productName: string;
-  color: string;
-  size: string;
-  imageUrl: string;
-  quantity: number;
-  price: number;
-}
-
-// Model đơn hàng gốc
-export interface OriginalOrderItem {
-  orderDetailId: number;
-  productVariantId: number;
-  productId: number;
-  productName: string;
-  quantity: number;
-  imageUrl: string;
-  size: string;
-  color: string;
-  price: number;
-  priceAtPurchase: number;
-  discountApplied: number;
-}
-
-export interface OriginalOrder {
-  orderId: number;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  address: string;
-  city: string;
-  district: string;
-  province: string;
-  country: string;
-  paymentMethod: string;
-  orderTotal: number;
-  shippingCost: number;
-  status: string;
-  createdDate: string;
-  ghnid: string;
-  orderItems: OriginalOrderItem[];
-}
-
-// Model yêu cầu đổi trả
-export interface ReturnRequestItem {
+// Thông tin đơn trả hàng chính
+export interface ReturnOrder {
   returnOrderId: number;
   orderId: number;
-  status: string;
-  createdDate: string;
+  accountName: string;
   totalRefundAmount: number;
-  refundMethod: string;
-  returnReason: string;
   returnOption: string;
   returnDescription: string;
-  returnImages: string[];
+  email: string;
+  status: string;
+  createdDate: string;  // ISO string
+}
+
+// Chi tiết thêm về đơn trả hàng
+export interface ReturnOrderDetail {
+  updatedDate: string | null;           // ISO string hoặc null
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountName: string | null;
-  returnItems: ReturnItem[];
-  order: OriginalOrder;
+  refundMethod: string;
+  returnImages: string[];               // mảng URL ảnh
 }
 
-// Params cho API
+// Các mặt hàng trong đơn trả hàng
+export interface ReturnOrderItem {
+  productVariantName: string;
+  size: string;
+  color: string;
+  imageUrl: string;
+  quantity: number;
+  priceAtPurchase: number;
+  shippingCost: number;
+  price: number;
+}
+
+// 1 mục trong mảng items của response
+export interface ReturnRequestItem {
+  returnOrder: ReturnOrder;
+  returnOrderDetail: ReturnOrderDetail;
+  returnOrderItems: ReturnOrderItem[];
+}
+
+// Params để gọi API lấy danh sách
 export interface GetReturnRequestsParams {
   status?: string;
   returnOption?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  orderId?: number;
+  dateFrom?: string;       // ISO date-time string, ví dụ "2025-04-01T00:00:00Z"
+  dateTo?: string;         // ISO date-time string
+  orderId?: number;        // lọc theo mã đơn
+  returnOrderId?: number;  // lọc theo mã yêu cầu trả hàng
+  handledBy?: number;      // lọc theo ID user đã xử lý
   pageNumber?: number;
   pageSize?: number;
 }
 
-// Response API
+
+// Kết quả trả về từ API
 export interface ReturnRequestsResponse {
   data: {
     items: ReturnRequestItem[];

@@ -6,6 +6,7 @@ import { AssignmentOrderResponse } from "@/type/orderdetail";
 import { GetReturnRequestsParams, ReturnRequestsResponse } from "@/type/returnrequest";
 import { AxiosResponse } from "axios";
 import orderclient from "./orderclient";
+import { UpdateStatusForm, UpdateStatusResponse } from "@/type/updatestatus";
 
 export const getOrdersManager = async (
   page: number,
@@ -193,6 +194,22 @@ export const getAssignmentManagerOrders = async (
 export const getReturnRequests = async (
   params: GetReturnRequestsParams
 ): Promise<ReturnRequestsResponse> => {
+  // Lấy thông tin account từ localStorage
+  const storedAccount = localStorage.getItem("account");
+  if (storedAccount) {
+    try {
+      const account = JSON.parse(storedAccount);
+      const shopManagerDetail = account.roleDetails?.shopManagerDetailId;
+      if (shopManagerDetail) {
+        // Luôn đính kèm handledBy vào params
+        params.handledBy = shopManagerDetail;
+      }
+    } catch (e) {
+      // Nếu parse JSON lỗi thì bỏ qua
+      console.warn("Không thể parse account từ localStorage", e);
+    }
+  }
+
   try {
     const response: AxiosResponse<ReturnRequestsResponse> = await orderclient.get(
       "/return-requests/all",
@@ -201,6 +218,48 @@ export const getReturnRequests = async (
     return response.data;
   } catch (error) {
     console.error("Error fetching return requests:", error);
+    throw error;
+  }
+};
+
+
+export const updateReturnRequestStatus = async (
+  returnOrderId: number,
+  form: {
+    newStatus: string;
+    comment?: string;
+  }
+): Promise<UpdateStatusResponse> => {
+  try {
+    // Lấy thông tin người dùng từ localStorage
+    const storedAccount = localStorage.getItem('account');
+    const account = storedAccount ? JSON.parse(storedAccount) : null;
+    const shopManagerDetailId = account?.roleDetails?.shopManagerDetailId;
+
+    if (!shopManagerDetailId) {
+      throw new Error('Không thể xác định người thực hiện hành động (changedBy)');
+    }
+
+    // Khởi tạo FormData và append các trường
+    const formData = new FormData();
+    formData.append('newStatus', form.newStatus);
+    formData.append('changedBy', shopManagerDetailId.toString());
+    if (form.comment) {
+      formData.append('comment', form.comment);
+    }
+
+    // Gọi API PUT /return-requests/{id}/status
+    const response = await orderclient.put<UpdateStatusResponse>(
+      `/return-requests/${returnOrderId}/status`,
+      formData
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Error updating return request status:', error);
+    if (error.response?.data) {
+      throw new Error(error.response.data.message || 'Unknown error');
+    }
     throw error;
   }
 };
