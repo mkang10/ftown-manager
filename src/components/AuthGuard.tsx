@@ -47,7 +47,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   return (
     <>
       {children}
-      <ToastContainer position="top-right" autoClose={3000} />
     </>
   );
 };

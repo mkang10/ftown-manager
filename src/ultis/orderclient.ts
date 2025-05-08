@@ -1,8 +1,16 @@
 import axios, { AxiosInstance } from 'axios';
 
 // Bạn có thể thay baseURL tùy vào môi trường:
+// const orderclient: AxiosInstance = axios.create({
+//   baseURL: 'https://localhost:7266/api/', // hoặc dùng biến môi trường
+//   headers: {
+//     'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
+//     Accept: '*/*',
+//   },
+// });
+
 const orderclient: AxiosInstance = axios.create({
-  baseURL: 'https://localhost:7266/api/', // hoặc dùng biến môi trường
+  baseURL: 'https://ftorderserviceapi.azurewebsites.net/api/', // hoặc dùng biến môi trường
   headers: {
     'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
     Accept: '*/*',

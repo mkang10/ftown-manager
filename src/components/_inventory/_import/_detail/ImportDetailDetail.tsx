@@ -231,7 +231,7 @@ const ImportDetailDetails: React.FC<ImportDetailDetailsProps> = ({ details, audi
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body1">
-                  <strong>Thay Đổi Bởi:</strong> {log.changedBy}
+                  <strong>Thay Đổi Bởi:</strong> {log.changedByName}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>

@@ -13,8 +13,16 @@ import axios, { AxiosInstance } from 'axios';
 // });
 
 //localhost
+// const shopmanagerclient: AxiosInstance = axios.create({
+//   baseURL: 'https://localhost:7000/api/',
+//   headers: {
+//     'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
+//     Accept: '*/*',
+//   },
+// });
+
 const shopmanagerclient: AxiosInstance = axios.create({
-  baseURL: 'https://localhost:7000/api/',
+  baseURL: 'https://ftsmservice.azurewebsites.net/api/',
   headers: {
     'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
     Accept: '*/*',

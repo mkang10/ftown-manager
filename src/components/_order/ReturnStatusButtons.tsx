@@ -12,7 +12,6 @@ const ReturnStatusButtons: React.FC<Props> = ({ returnOrderId, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [changedBy, setChangedBy] = useState<number | null>(null);
 
-  // Lấy thông tin user từ localStorage
   useEffect(() => {
     const stored = localStorage.getItem('account');
     if (stored) {
@@ -27,7 +26,7 @@ const ReturnStatusButtons: React.FC<Props> = ({ returnOrderId, onSuccess }) => {
   }, []);
 
   const handleUpdate = useCallback(
-    async (newStatus: 'Canceled' | 'Completed') => {
+    async (newStatus: 'Approved' | 'Rejected') => {
       if (!changedBy) {
         toast.error('Không tìm thấy người thực hiện hành động.');
         return;
@@ -39,7 +38,7 @@ const ReturnStatusButtons: React.FC<Props> = ({ returnOrderId, onSuccess }) => {
         const payload = {
           newStatus,
           changedBy,
-          comment: newStatus === 'Canceled'
+          comment: newStatus === 'Rejected'
             ? 'Quản lý không chấp nhận trả hàng'
             : 'Quản lý đã chấp nhận trả hàng',
         };
@@ -47,6 +46,10 @@ const ReturnStatusButtons: React.FC<Props> = ({ returnOrderId, onSuccess }) => {
         if (result.status) {
           toast.success('Cập nhật thành công!', { toastId: `return-${returnOrderId}` });
           onSuccess?.();
+          // Tự động reload sau khi cập nhật
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
         } else {
           toast.error(result.message || 'Cập nhật thất bại');
         }
@@ -63,23 +66,28 @@ const ReturnStatusButtons: React.FC<Props> = ({ returnOrderId, onSuccess }) => {
     borderRadius: '12px',
     textTransform: 'none',
     fontWeight: 600,
-    px: 3,
+    fontSize: '0.875rem',
+    lineHeight: 1.5,
+    px: 2,
     py: 1,
-    boxShadow: 'none',
-    '&:hover': { boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' },
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    transition: 'all 0.2s ease-in-out',
+    '&:hover': { boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)' },
     '&:disabled': { opacity: 0.6 },
   };
 
   return (
-    <Box display="flex" gap={1}>
+    <Box display="flex" gap={1} alignItems="center">
       <Button
         variant="outlined"
+        size="small"
         disabled={loading}
-        onClick={e => { e.stopPropagation(); handleUpdate('Canceled'); }}
+        onClick={e => { e.stopPropagation(); handleUpdate('Rejected'); }}
         sx={{
           ...buttonStyles,
-          borderColor: '#000',
-          color: '#000',
+          borderColor: '#FF5F5F',
+          color: '#FF5F5F',
+          '&:hover': { backgroundColor: 'rgba(255,95,95,0.1)' },
         }}
       >
         Không chấp nhận
@@ -87,13 +95,14 @@ const ReturnStatusButtons: React.FC<Props> = ({ returnOrderId, onSuccess }) => {
 
       <Button
         variant="contained"
+        size="small"
         disabled={loading}
-        onClick={e => { e.stopPropagation(); handleUpdate('Completed'); }}
+        onClick={e => { e.stopPropagation(); handleUpdate('Approved'); }}
         sx={{
           ...buttonStyles,
-          backgroundColor: '#000',
+          backgroundColor: '#4CAF50',
           color: '#fff',
-          '&:hover': { backgroundColor: '#333', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' },
+          '&:hover': { backgroundColor: '#45A047' },
         }}
       >
         Chấp nhận

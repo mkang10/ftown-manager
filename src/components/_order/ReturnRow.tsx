@@ -79,7 +79,7 @@ const ReturnRow: React.FC<ReturnRowProps> = ({ row, onUpdateSuccess }) => {
         <TableCell>{returnDescription}</TableCell>
         <TableCell>{totalRefundAmount.toLocaleString("vi-VN")} VND</TableCell>
         <TableCell>
-  {returnOrder.status === "Pending Confirmed" ? (
+  {returnOrder.status === "Pending Processing" ? (
     <ReturnStatusButtons
       returnOrderId={returnOrder.returnOrderId}
       onSuccess={onUpdateSuccess}

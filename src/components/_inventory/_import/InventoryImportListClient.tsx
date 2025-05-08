@@ -105,43 +105,43 @@ const InventoryImportListClient: React.FC = () => {
   };
 
   // ── trong InventoryImportListClient.tsx ──
-const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  // Lấy accountId và warehouseId từ localStorage
-  const stored = localStorage.getItem("account");
-  const account = stored ? JSON.parse(stored) : null;
-  const warehouseId = account?.roleDetails?.storeId ?? 0;
-  const createdBy   = account?.accountId           ?? 0;
+    // Lấy accountId và warehouseId từ localStorage
+    const stored = localStorage.getItem("account");
+    const account = stored ? JSON.parse(stored) : null;
+    const warehouseId = account?.roleDetails?.storeId ?? 0;
+    const createdBy = account?.accountId ?? 0;
 
-  if (!warehouseId) {
-    toast.error("Vui lòng chọn kho trước khi nhập từ Excel.");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    return;
-  }
-
-  setLoading(true);
-  try {
-    // Gọi API với thêm warehouseId và createdBy
-    const response = await importInventoryFromExcel(file, warehouseId, createdBy);
-    if (!response.status) {
-      toast.error(response.message);
-    } else {
-      toast.success(response.message);
-      fetchData(filters);
+    if (!warehouseId) {
+      toast.error("Vui lòng chọn kho trước khi nhập từ Excel.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
     }
-  } catch (err) {
-    console.error(err);
-    toast.error("Có lỗi khi nhập từ Excel. Vui lòng thử lại.");
-  } finally {
-    setLoading(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-};
 
-  
-  
+    setLoading(true);
+    try {
+      // Gọi API với thêm warehouseId và createdBy
+      const response = await importInventoryFromExcel(file, warehouseId, createdBy);
+      if (!response.status) {
+        toast.error(response.message);
+      } else {
+        toast.success(response.message);
+        fetchData(filters);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Có lỗi khi nhập từ Excel. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+
+
   const totalPages = Math.ceil(totalCount / Number(filters.PageSize));
 
   return (
@@ -204,6 +204,21 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
           >
             Nhập từ Excel
           </Button>
+          <Button
+            variant="contained"
+            href="https://res.cloudinary.com/dvbbfcxdz/raw/upload/v1746733836/import_test_-_Copy_dsatn2.xlsx"
+            download
+            sx={{
+              textTransform: 'none',
+              backgroundColor: '#3f51b5',
+              color: '#fff',
+              '&:hover': { backgroundColor: '#303f9f' },
+              fontWeight: 500,
+              marginLeft: 2
+            }}
+          >
+            Tải phiếu mẫu
+          </Button>
           {/* input ẩn để chọn file */}
           <input
             type="file"
@@ -264,16 +279,16 @@ const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         initialFilters={filters}
       />
       <ToastContainer
-  position="top-right"
-  autoClose={3000} // 3 giây, bạn có thể thay đổi số này
-  hideProgressBar={false}
-  newestOnTop={false}
-  closeOnClick
-  rtl={false}
-  pauseOnFocusLoss
-  draggable
-  pauseOnHover
-/>
+        position="top-right"
+        autoClose={3000} // 3 giây, bạn có thể thay đổi số này
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
 
     </Box>
   );

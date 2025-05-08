@@ -51,8 +51,10 @@ interface RowProps {
 // Hàm lấy màu background theo trạng thái
 const getStatusColor = (status?: string) => {
   switch (status) {
+    case 'Paid':
+      return '#000';    
     case 'Pending Confirmed':
-      return '#FFD54F';       // vàng nhạt
+      return '#FFD54F';         // vàng nhạt
     case 'Confirmed':
       return '#42A5F5';       // xanh dương
     case 'Delivering':
@@ -126,7 +128,7 @@ const OrderRow: React.FC<RowProps> = ({ row, onRefresh }) => {
         <TableCell>{row.order?.orderTotal.toLocaleString()} VND</TableCell>
         <TableCell>{row.order?.shippingCost.toLocaleString()}</TableCell>
         <TableCell>
-          {row.order?.status === 'Pending Confirmed' ? (
+          {row.order?.status === 'Pending Confirmed' || row.order?.status === 'Paid' ? (
             <Button
               variant="contained"
               size="small"

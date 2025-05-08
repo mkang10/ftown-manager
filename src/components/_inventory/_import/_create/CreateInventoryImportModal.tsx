@@ -181,7 +181,7 @@ const CreateInventoryImportModal: React.FC<CreateInventoryImportModalProps> = ({
                   disabled={loading}
                 />
               }
-              label="Gấp (isUrgent)"
+              label="Khẩn Cấp"
             />
           </Box>
 
