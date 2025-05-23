@@ -155,7 +155,7 @@ const DispatchStoreExportDetailPage: React.FC = () => {
           <Grid container spacing={2}>
             {[
               { label: 'Kho', content: detail.warehouseName },
-              { label: 'Người gán', content: detail.handleBy },
+              { label: 'Quản lý', content: detail.handleBy },
               { label: 'Nhân viên', content: detail.staff || '-' },
               { label: 'Sản phẩm', content: detail.productName || '-' },
               { label: 'Kích thước', content: detail.sizeName || '-' },

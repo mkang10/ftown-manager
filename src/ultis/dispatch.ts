@@ -1,9 +1,8 @@
 import { DispatchResponse } from "@/type/dispatch";
-import shopmanagerclient from "./ShopmanagerClient";
+import apiclient from "./apiclient";
 import { DispatchStoreDetailResponse } from "@/type/dispatchStoreDetail";
 import { FullStockDetail, FullStockResponse } from "@/type/importStaff";
 import { DispatchResponseDto } from "@/type/dispatchdetail";
-import adminClient from "./adminclient";
 
 export const getDispatches = async (
   page: number,
@@ -40,7 +39,7 @@ export const getDispatches = async (
     });
   }
 
-  const response = await shopmanagerclient.get<{
+  const response = await apiclient.get<{
     data: DispatchResponse;
     status: boolean;
     message: string;
@@ -88,7 +87,7 @@ export const getAllDispatches = async (
     });
   }
 
-  const response = await shopmanagerclient.get<{
+  const response = await apiclient.get<{
     data: DispatchResponse;
     status: boolean;
     message: string;
@@ -139,7 +138,7 @@ export const filterDispatchStoreDetails = async (
     queryParams.append("PageSize", pageSize.toString());
   }
 
-  const response = await shopmanagerclient.get<{
+  const response = await apiclient.get<{
     data: DispatchStoreDetailResponse;
     status: boolean;
     message: string;
@@ -158,7 +157,7 @@ export const updateFullStockDispatch = async (
   details: FullStockDetail[]
 ): Promise<FullStockResponse> => {
   const url = `/dispatch/${dispatchid}/done?staffId=${staffId}`;
-  const response = await shopmanagerclient.post<FullStockResponse>(
+  const response = await apiclient.post<FullStockResponse>(
     url,
     details,
     {
@@ -170,7 +169,7 @@ export const updateFullStockDispatch = async (
 export const getDispatchById = async (
   id: number
 ): Promise<DispatchResponseDto> => {
-  const response = await adminClient.get<{ data: DispatchResponseDto }>(
+  const response = await apiclient.get<{ data: DispatchResponseDto }>(
     `/dispatch/dispatch/${id}`
   );
   return response.data.data;

@@ -1,11 +1,11 @@
 import { ImportStoreDetailResponse } from "@/type/importstore";
-import adminClient from "./adminclient";
+import apiclient from "./apiclient";
 
 export const getImportStoreDetailById = async (
   id: number
 ): Promise<ImportStoreDetailResponse> => {
   try {
-    const response = await adminClient.get<ImportStoreDetailResponse>(
+    const response = await apiclient.get<ImportStoreDetailResponse>(
       `/importstoredetail/${id}`
     );
     return response.data;

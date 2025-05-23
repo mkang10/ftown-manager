@@ -1,6 +1,6 @@
 import { ApiResponse } from "@/type/apiResponse";
 import { AssignStaffResponse, GetStaffNamesResponse } from "@/type/Staff";
-import shopmanagerclient from "./ShopmanagerClient";
+import apiclient from "./apiclient";
 
 /**
  * Gán nhân viên cho import
@@ -10,7 +10,7 @@ export const assignStaffDetail = async (
   staffDetailId: number
 ): Promise<AssignStaffResponse> => {
   try {
-    const response = await shopmanagerclient.put<AssignStaffResponse>(
+    const response = await apiclient.put<AssignStaffResponse>(
       `/inventoryimport/${importId}/assign-staff?staffDetailId=${staffDetailId}`
     );
     return response.data;
@@ -43,7 +43,7 @@ export const getStaffNames = async (): Promise<GetStaffNamesResponse> => {
       throw new Error("Không xác định được warehouseId từ localStorage");
     }
 
-    const response = await shopmanagerclient.get<GetStaffNamesResponse>(
+    const response = await apiclient.get<GetStaffNamesResponse>(
       `/inventoryimport/names?warehouseId=${warehouseId}`
     );
 
@@ -62,7 +62,7 @@ export const assignDispatchStaffDetail = async (
   staffDetailId: number
 ): Promise<AssignStaffResponse> => {
   try {
-    const response = await shopmanagerclient.put<AssignStaffResponse>(
+    const response = await apiclient.put<AssignStaffResponse>(
       `/dispatch/${dispatchId}/assign-staff?staffDetailId=${staffDetailId}`
     );
     return response.data;

@@ -1,5 +1,5 @@
 import { DispatchResponse } from "@/type/dispatchnew";
-import shopmanagerclient from "./ShopmanagerClient";
+import apiclient from "./apiclient";
 
 export const getDispatchByStaff = async (
     params: {
@@ -11,7 +11,7 @@ export const getDispatchByStaff = async (
       PageSize?: number;
     }
   ): Promise<DispatchResponse> => {
-    const response = await shopmanagerclient.get<DispatchResponse>(
+    const response = await apiclient.get<DispatchResponse>(
       "/dispatch/by-staff",
       { params }
     );

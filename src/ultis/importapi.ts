@@ -1,5 +1,4 @@
 // /src/api/inventoryImportApi.ts
-import shopmanagerclient from "./ShopmanagerClient";
 import {
   FilterInventoryResponse,
 } from "@/type/InventoryImport";
@@ -7,7 +6,6 @@ import {
 // GET: Lấy danh sách Inventory Import
 // /src/ultis/importapi.ts
 import apiclient from "./apiclient";
-import adminclient from "./adminclient";
 import { productVariant } from "@/type/Product";
 import { ImportDetailResponse } from "@/type/importdetail";
 import { InventoryImportCreateRequest, InventoryImportCreateResponse } from "@/type/createInventoryImport";
@@ -24,8 +22,8 @@ export const createInventoryImport = async (
 ): Promise<InventoryImportCreateResponse> => {
   try {
     // Gửi request và nhận về blob (có thể là file hoặc JSON)
-    const response = await shopmanagerclient.post<Blob>(
-      "/inventoryimport/create",
+    const response = await apiclient.post<Blob>(
+      "/inventoryimport/createtransfer",
       data,
       { responseType: "blob" }
     );
@@ -101,7 +99,7 @@ export const filterInventoryImports = async (
     // Luôn gán HandleBy
     queryParams.set("HandleBy", shopManagerDetailId);
 
-    const response = await shopmanagerclient.get<FilterInventoryResponse>(
+    const response = await apiclient.get<FilterInventoryResponse>(
       `/inventoryimport/get-all?${queryParams.toString()}`
     );
 
@@ -117,7 +115,7 @@ export const getProductVariants = async (
   search: string = ""
 ): Promise<{ data: productVariant[]; totalRecords: number }> => {
   try {
-    const response = await shopmanagerclient.get<{
+    const response = await apiclient.get<{
       data: {
         data: productVariant[];
         totalRecords: number;
@@ -149,7 +147,7 @@ export const getProductVariants = async (
 export const getImportDetail = async (importId: number): Promise<ImportDetailResponse> => {
   try {
     // Gửi GET request với importId được đính kèm trong URL
-    const response = await adminclient.get<ImportDetailResponse>(`/inventoryimport/${importId}`);
+    const response = await apiclient.get<ImportDetailResponse>(`/inventoryimport/${importId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching import detail:", error);
@@ -179,7 +177,7 @@ export const filterStaffInventoryImports = async (
       }
     });
 
-    const response = await shopmanagerclient.get<FilterStaffInventoryResponse>(
+    const response = await apiclient.get<FilterStaffInventoryResponse>(
       `/inventoryimport/by-staff/?${queryParams.toString()}`
     );
     return response.data;
@@ -198,7 +196,7 @@ export const updateFullStock = async (
   details: FullStockDetail[]
 ): Promise<FullStockResponse> => {
   const url = `/inventoryimport/${importId}/done?staffId=${staffId}`;
-  const response = await shopmanagerclient.post<FullStockResponse>(
+  const response = await apiclient.post<FullStockResponse>(
     url,
     details,
     {
@@ -215,7 +213,7 @@ export const updateCancelled = async (
 ): Promise<FullStockResponse> => {
   // Endpoint cập nhật cancelled, thay updateLowStock
   const url = `/inventoryimport/${importId}/incompleted?staffId=${staffId}`;
-  const response = await shopmanagerclient.post<FullStockResponse>(
+  const response = await apiclient.post<FullStockResponse>(
     url,
     details,
     { headers: { "Content-Type": "application/json" } }
@@ -229,7 +227,7 @@ export const updateShortage = async (
   details: FullStockDetail[]
 ): Promise<FullStockResponse> => {
   const url = `/inventoryimport/shortage?importId=${importId}&staffId=${staffId}`;
-  const response = await shopmanagerclient.post<FullStockResponse>(
+  const response = await apiclient.post<FullStockResponse>(
     url,
     details,
     { headers: { "Content-Type": "application/json" } }
@@ -239,7 +237,7 @@ export const updateShortage = async (
 export const getImportById = async (
   importId: number
 ): Promise<ImportResponseDto> => {
-  const response = await adminclient.get<{ data: ImportResponseDto }>(
+  const response = await apiclient.get<{ data: ImportResponseDto }>(
     `/inventoryimport/${importId}`
   );
   return response.data.data;
@@ -258,7 +256,7 @@ export const importInventoryFromExcel = async (
   formData.append('createdBy', createdBy.toString());
 
   // Luôn dùng blob để có thể đọc cả file lẫn JSON lỗi
-  const response = await shopmanagerclient.post('/inventoryimport/create-from-excel', formData, {
+  const response = await apiclient.post('/inventoryimport/createtransfer-from-excel', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     responseType: 'blob',
   });

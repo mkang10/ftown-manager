@@ -1,11 +1,10 @@
 import { AssignmentOrderFilters, AssignmentOrderListResponse, OrderResponse } from "@/type/order";
-import shopmanagerclient from "./ShopmanagerClient";
 import { AssignStaffResponse } from "@/type/Staff";
 import { CompleteOrderResponse } from "@/type/completeOrder";
 import { AssignmentOrderResponse } from "@/type/orderdetail";
 import { GetReturnRequestsParams, ReturnRequestsResponse } from "@/type/returnrequest";
 import { AxiosResponse } from "axios";
-import orderclient from "./orderclient";
+import apiclient from "./apiclient";
 import { UpdateStatusForm, UpdateStatusResponse } from "@/type/updatestatus";
 
 export const getOrdersManager = async (
@@ -45,7 +44,7 @@ export const getOrdersManager = async (
 
   const url = `/orders?${queryParams.toString()}`;
 
-  const response = await shopmanagerclient.get<{
+  const response = await apiclient.get<{
     data: OrderResponse;
     status: boolean;
     message: string;
@@ -70,7 +69,7 @@ export const assignOrderToStaff = async (
       comments,
     };
 
-    const response = await shopmanagerclient.put<AssignStaffResponse>(
+    const response = await apiclient.put<AssignStaffResponse>(
       `/orders/assign`, // API gốc: https://localhost:7265/api/orders/assign
       payload
     );
@@ -85,7 +84,7 @@ export const completeOrder = async (
   orderId: number
 ): Promise<CompleteOrderResponse> => {
   try {
-    const response = await shopmanagerclient.put<CompleteOrderResponse>(
+    const response = await apiclient.put<CompleteOrderResponse>(
       `/orders/${orderId}/complete`
     );
     return response.data;
@@ -131,7 +130,7 @@ export const getOrdersStaff = async (
   }
 
   const url = `/orders?${queryParams.toString()}`;
-  const response = await shopmanagerclient.get<{
+  const response = await apiclient.get<{
     data: OrderResponse;
     status: boolean;
     message: string;
@@ -143,7 +142,7 @@ export const getOrdersStaff = async (
 
   return response.data.data;
 };
-// src/api/orderClient.ts
+// src/api/apiclient.ts
 
 
 // GET: Lấy thông tin Assignment + Order theo ID
@@ -151,7 +150,7 @@ export const getAssignmentOrderById = async (
   assignmentId: number
 ): Promise<AssignmentOrderResponse> => {
   try {
-    const response = await shopmanagerclient.get<AssignmentOrderResponse>(
+    const response = await apiclient.get<AssignmentOrderResponse>(
       `/orders/${assignmentId}`
     );
     return response.data;
@@ -165,8 +164,8 @@ export const getAssignmentStaffOrders = async (
   filters: AssignmentOrderFilters
 ): Promise<AssignmentOrderListResponse> => {
   try {
-    const response = await shopmanagerclient.get<AssignmentOrderListResponse>(
-      '/orders',
+    const response = await apiclient.get<AssignmentOrderListResponse>(
+      '/orders/assignment',
       { params: filters }
     );
     return response.data;
@@ -180,8 +179,8 @@ export const getAssignmentManagerOrders = async (
   filters: AssignmentOrderFilters
 ): Promise<AssignmentOrderListResponse> => {
   try {
-    const response = await shopmanagerclient.get<AssignmentOrderListResponse>(
-      '/orders',
+    const response = await apiclient.get<AssignmentOrderListResponse>(
+      '/orders/assignment',
       { params: filters }
     );
     return response.data;
@@ -211,7 +210,7 @@ export const getReturnRequests = async (
   }
 
   try {
-    const response: AxiosResponse<ReturnRequestsResponse> = await orderclient.get(
+    const response: AxiosResponse<ReturnRequestsResponse> = await apiclient.get(
       "/return-requests/all",
       { params }
     );
@@ -249,7 +248,7 @@ export const updateReturnRequestStatus = async (
     }
 
     // Gọi API PUT /return-requests/{id}/status
-    const response = await orderclient.put<UpdateStatusResponse>(
+    const response = await apiclient.put<UpdateStatusResponse>(
       `/return-requests/${returnOrderId}/status`,
       formData
     );

@@ -1,12 +1,12 @@
 import { LoginRequest, LoginResponse } from "@/type/auth";
-import authclient from "./authclient";
+import apiclient from "./apiclient";
 
 // POST: Đăng nhập người dùng
 export const loginUser = async (
   credentials: LoginRequest
 ): Promise<LoginResponse> => {
   try {
-    const response = await authclient.post<LoginResponse>(
+    const response = await apiclient.post<LoginResponse>(
       "/auth/login",
       credentials
     );

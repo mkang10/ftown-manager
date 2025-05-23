@@ -1,5 +1,5 @@
 import { FilterStaffInventoryResponse } from "@/type/importassign";
-import shopmanagerclient from "./ShopmanagerClient";
+import apiclient from "./apiclient";
 
 export const filterStaffInventoryImports = async (
     filterData: {
@@ -32,7 +32,7 @@ export const filterStaffInventoryImports = async (
       });
   
       // Gọi API
-      const response = await shopmanagerclient.get<FilterStaffInventoryResponse>(
+      const response = await apiclient.get<FilterStaffInventoryResponse>(
         `/inventoryimport/assign-staff?${params.toString()}`
       );
       return response.data;

@@ -1,11 +1,11 @@
 {
-  "name": "vietnong-fe",
+  "name": "ftown-manager",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
+   "scripts": {
+    "dev": "next dev -p1212",
     "build": "next build",
-    "start": "next start",
+    "start": "next start  -p1212",
     "lint": "next lint"
   },
   "dependencies": {
